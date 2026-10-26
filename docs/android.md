@@ -60,6 +60,17 @@ No gameplay fork — `scripts/`, `scenes/`, `data/` are untouched
 godot --headless --path . --export-debug "Android" build/android/permaculture.apk
 ```
 
+Play delivery (AAB, release-signed) from the same preset: flip
+`gradle_build/export_format` to `1` (AAB), then export to a separate path
+so the debug APK evidence build is never overwritten:
+
+```sh
+godot --headless --path . --export-release "Android" build/android/permaculture.aab
+```
+
+Release signing (not done here): create a release keystore, set
+`keystore/release_*` via environment/CI secrets — never commit it.
+
 Validate the preset without building:
 
 ```sh
@@ -97,6 +108,3 @@ python3 tools/validate_android_preset.py
   (emulator `screenrecord`), plus `still.png`.
 - `docs/evidence/8/validator.log` — preset validator output.
 - `docs/evidence/8/commands.log` — exact build/install/QA commands run.
-
-Release signing (not done here): create a release keystore, set
-`keystore/release_*` via environment/CI secrets — never commit it.

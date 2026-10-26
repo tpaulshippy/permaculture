@@ -5,7 +5,10 @@
 
 export PATH="$HOME/Android/sdk/platform-tools:$HOME/Android/sdk/emulator:$PATH"
 
-# 0. Clean Godot-generated import noise; *.import now gitignored (none tracked).
+# 0. Clean Godot-generated import noise (*.import is untracked repo-wide).
+# NOTE ordering: this clean ran BEFORE the `*.import` rule was added to
+# .gitignore, so plain `-f` removed them here; with the rule in place the
+# equivalent is `git clean -fX -- '*.import'`.
 git clean -f -- '*.import'
 
 # 1. Debug APK export (headless). android/build template + .build_version

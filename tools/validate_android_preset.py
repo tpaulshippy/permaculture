@@ -2,15 +2,17 @@
 """Validate the Android export preset (issue #8). Packaging only.
 
 Checks:
-  - export_presets.cfg parses and the Android preset is complete/consistent
-    (APK format, package id, version, icons resolve to real files,
-    zero permissions requested, arm64 + x86_64 ABIs, non-XR).
-  - icons/ PNGs exist at the sizes the preset requires.
-  - project.godot keeps desktop Forward Plus, adds only the documented
-    mobile packaging overrides (orientation, gl_compatibility).
-  - No gameplay fork: no changes vs origin/main outside the packaging
-    allowlist (preset, icons, project.godot packaging keys, .gitignore,
-    docs/android.md, this validator, docs/evidence/8/).
+  - export_presets.cfg parses (no interpolation) and the Android preset is
+    complete/consistent (APK format, package id, version, icons resolve to
+    real files, zero permissions requested, arm64 + x86_64 ABIs, non-XR).
+  - icons/ PNGs exist at the sizes the preset requires (truncation-safe).
+  - project.godot, matched on whole uncommented lines, keeps desktop
+    Forward Plus and adds only the documented mobile packaging overrides
+    (orientation, gl_compatibility, ETC2/ASTC import).
+  - No gameplay fork: committed diff vs origin/main plus worktree changes
+    stay inside the packaging allowlist (exact files, prefix dirs only),
+    and the project.godot key diff vs base touches only documented
+    packaging keys. Any git inspection failure is itself a failure.
 
 Exit code 0 = all checks passed, 1 = at least one failure.
 """
@@ -32,7 +34,7 @@ def check(cond, label):
 
 
 def read_cfg(path):
-    cp = configparser.ConfigParser(strict=False)
+    cp = configparser.ConfigParser(strict=False, interpolation=None)
     # Preserve case; ConfigParser lowercases keys by default.
     cp.optionxform = str
     with open(path, encoding="utf-8") as f:
@@ -50,21 +52,28 @@ def png_size(path):
             return None
         import struct
 
-        w, h = struct.unpack(">II", f.read(8))
+        raw = f.read(8)
+        if len(raw) != 8:
+            return None
+        w, h = struct.unpack(">II", raw)
         return (w, h)
 
 
-def git_changed_vs_main():
+def run_git(*args):
     out = subprocess.run(
-        ["git", "status", "--porcelain", "--untracked-files=all", "--", "."],
+        ["git"] + list(args),
         cwd=REPO,
         capture_output=True,
         text=True,
     )
     if out.returncode != 0:
         return None
+    return out.stdout
+
+
+def parse_status_paths(text):
     changed = []
-    for line in out.stdout.splitlines():
+    for line in text.splitlines():
         # Format: XY <path> [-> <orig>]. Untracked shows as "?? <path>".
         path = line[3:].strip().strip('"')
         if " -> " in path:
@@ -72,6 +81,46 @@ def git_changed_vs_main():
         if path:
             changed.append(path)
     return sorted(changed)
+
+
+def git_committed_vs_base():
+    base = run_git("merge-base", "HEAD", "origin/main")
+    if base is None:
+        return None
+    diff = run_git("diff", "--name-only", base.strip(), "HEAD", "--", ".")
+    if diff is None:
+        return None
+    return sorted(p for p in (ln.strip() for ln in diff.splitlines()) if p)
+
+
+def git_worktree_changed():
+    out = run_git("status", "--porcelain", "--untracked-files=all", "--", ".")
+    if out is None:
+        return None
+    return parse_status_paths(out)
+
+
+def proj_kv(text):
+    """Godot cfg key=value pairs, ignoring section headers and ';' comments."""
+    kv = {}
+    for ln in text.splitlines():
+        s = ln.strip()
+        if not s or s.startswith(";") or s.startswith("["):
+            continue
+        if "=" not in s:
+            continue
+        k, _, v = s.partition("=")
+        kv[k.strip()] = v.strip()
+    return kv
+
+
+# project.godot keys this packaging issue is allowed to add/change vs base.
+# (Section-relative keys as they literally appear under [display]/[rendering].)
+PACKAGING_PROJ_KEYS = {
+    "window/handheld/orientation",
+    "renderer/rendering_method.mobile",
+    "textures/vram_compression/import_etc2_astc",
+}
 
 
 def main():
@@ -162,41 +211,75 @@ def main():
     )
 
     # project.godot: desktop renderer untouched, mobile overrides documented.
+    # Line-exact matches: a ';'-commented line must NOT satisfy these checks.
     proj = os.path.join(REPO, "project.godot")
     with open(proj, encoding="utf-8") as f:
         proj_text = f.read()
+    proj_lines = set()
+    for ln in proj_text.splitlines():
+        s = ln.strip()
+        if s and not s.startswith(";"):
+            proj_lines.add(s)
     hash_comments = [
         ln for ln in proj_text.splitlines() if ln.lstrip().startswith("#")
     ]
     check(not hash_comments,
           "project.godot uses ';' comments (Godot cfg has no '#' comments): %s"
           % hash_comments)
-    check('renderer/rendering_method="forward_plus"' in proj_text,
+    check('renderer/rendering_method="forward_plus"' in proj_lines,
           "desktop renderer stays forward_plus")
-    check('renderer/rendering_method.mobile="gl_compatibility"' in proj_text,
+    check('renderer/rendering_method.mobile="gl_compatibility"' in proj_lines,
           "mobile renderer override is gl_compatibility")
-    check("textures/vram_compression/import_etc2_astc=true" in proj_text,
+    check("textures/vram_compression/import_etc2_astc=true" in proj_lines,
           "ETC2/ASTC import enabled (Android export requirement)")
-    check("window/handheld/orientation=4" in proj_text,
+    check("window/handheld/orientation=4" in proj_lines,
           "handheld orientation is sensor_landscape (4)")
 
-    # No gameplay fork: changed files must be packaging-only.
-    allowed_prefixes = (
+    # No gameplay fork: committed diff vs origin/main AND worktree changes
+    # must be packaging-only. Exact file matches; prefixes only for dirs.
+    allowed_files = {
         "export_presets.cfg",
         "project.godot",
         ".gitignore",
-        "icons/",
         "docs/android.md",
-        "docs/evidence/8/",
         "tools/validate_android_preset.py",
+    }
+    allowed_dirs = (
+        "icons/",
+        "docs/evidence/8/",
     )
-    changed = git_changed_vs_main()
-    if changed is None:
-        print("SKIP: could not diff vs origin/main (no git history?)")
+    committed = git_committed_vs_base()
+    worktree = git_worktree_changed()
+    if committed is None or worktree is None:
+        check(False, "git inspection failed (merge-base/diff/status) — "
+                     "cannot prove no gameplay fork")
     else:
-        print("changed vs origin/main: %s" % changed)
-        bad = [c for c in changed if not c.startswith(allowed_prefixes)]
+        changed = sorted(set(committed) | set(worktree))
+        print("committed vs origin/main: %s" % committed)
+        print("worktree changes: %s" % worktree)
+        bad = [c for c in changed
+               if c not in allowed_files
+               and not c.startswith(allowed_dirs)]
         check(not bad, "no gameplay fork (non-packaging changes: %s)" % bad)
+
+    # project.godot key diff vs base: only documented packaging keys may be
+    # added/changed; nothing else (e.g. main scene, desktop settings).
+    base_ref = run_git("merge-base", "HEAD", "origin/main")
+    base_text = (run_git("show", "%s:project.godot" % base_ref.strip())
+                 if base_ref else None)
+    if base_text is None:
+        check(False, "could not read base project.godot for key diff — "
+                     "cannot prove no gameplay fork")
+    else:
+        base_kv = proj_kv(base_text)
+        cur_kv = proj_kv(proj_text)
+        removed = sorted(k for k in base_kv if k not in cur_kv)
+        altered = sorted(k for k in cur_kv
+                         if k not in base_kv or base_kv[k] != cur_kv[k])
+        unexpected = sorted(k for k in altered if k not in PACKAGING_PROJ_KEYS)
+        check(not removed, "project.godot removes no keys: %s" % removed)
+        check(not unexpected,
+              "project.godot changes are packaging-only: %s" % unexpected)
 
     print("---")
     if FAILURES:
