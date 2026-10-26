@@ -1,0 +1,18 @@
+docs/android.md
+  h_6bbd00fe0a456a 69,71-77,79-92
+docs/evidence/8/commands.log
+  h_6bbd00fe0a456a 1-43
+docs/evidence/8/validator.log
+  h_6bbd00fe0a456a 32,35,37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d04192db466297c04cce8b65df7a4e735e0616fa",
+  "prompts": {},
+  "humans": {
+    "h_6bbd00fe0a456a": {
+      "author": "Paul Shippy <pshippy@gmail.com>"
+    }
+  }
+}
