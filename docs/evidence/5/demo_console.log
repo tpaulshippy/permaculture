@@ -9,6 +9,6 @@ Demo: Next pressed | Month 2 (Feb) | money $2965 water 5911 gal mh 107 | no warn
 Demo: spammed 24/24 mesquite | Q13 [house OK, well OK, plant OK] -> Next UNLOCKED
 Demo: Next pressed | Month 3 (Mar) | money $1910 water 3573 gal mh 180 | WARNING: Irrigation shortfall 3750 gal — no game over (Q14)
 Demo: Next pressed | Month 4 (Apr) | money $1815 water 1180 gal mh 301 | WARNING: Irrigation shortfall 3750 gal — no game over (Q14)
-Demo: Next pressed | Month 5 (May) | money $1720 water 0 gal mh 422 | WARNING: Irrigation shortfall 5024 gal; Water table depleted — no game over (Q14)
+Demo: Next pressed | Month 5 (May) | money $1720 water 0 gal mh 422 | WARNING: Irrigation shortfall 3750 gal; Water table depleted — no game over (Q14)
 Demo finished: Q13 [house OK, well OK, plant OK] -> Next UNLOCKED frames=626
-Demo resources: Month 5 (May) money $1720 water 0 gal mh 422 | WARNING: Irrigation shortfall 5024 gal; Water table depleted — no game over (Q14)
+Demo resources: Month 5 (May) money $1720 water 0 gal mh 422 | WARNING: Irrigation shortfall 3750 gal; Water table depleted — no game over (Q14)

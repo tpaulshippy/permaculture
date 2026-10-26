@@ -111,6 +111,16 @@ func _init() -> void:
 	_check(is_equal_approx(s_yield.money, 9972.0),
 		"mesquite yields $12 from month 12")
 
+	# Shortfall is live: one mesquite with no well warns immediately, and
+	# placing a well clears it without waiting for Next.
+	var s_cap = SimScript.new()
+	_check(s_cap.setup(), "capacity sim sets up")
+	s_cap.charge_place("mesquite")
+	_check(String(s_cap.warning_text()).contains("Irrigation shortfall"),
+		"uncovered demand warns before any Next")
+	s_cap.charge_place("well_l1")
+	_check(s_cap.warning_text() == "", "placing a well clears the shortfall")
+
 	if _failures == 0:
 		print("HUD sim test: all checks passed.")
 	else:

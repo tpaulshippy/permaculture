@@ -51,6 +51,8 @@ Costs/upkeep read from `data/tuning.json` at runtime (numbers untouched);
 rainfall from `data/sonoran_rainfall.json`; wind is a deterministic function
 of `month_index` with zero sim effect (Q12). The water-table bar is the
 groundwater stock: ditch capture recharges it, wells draw from it (delivery
-is capped by demand and by what the table holds, so wells never raise it),
-and demand above delivery is an irrigation shortfall. Warnings (negative
-money/mh, shortfall, depleted table) never block (Q14).
+is capped by demand and by what the table holds, so wells never raise it).
+The banner's shortfall line is the live demand-above-capacity gap, so a new
+well clears it immediately; the monthly report carries the realized
+last-month shortfall. Warnings (negative money/mh, shortfall, depleted
+table) never block (Q14).

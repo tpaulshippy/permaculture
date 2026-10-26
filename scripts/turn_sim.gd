@@ -21,8 +21,11 @@ extends RefCounted
 ##   it: delivered = min(capacity, demand, table + capture). Unmet demand is
 ##   an irrigation shortfall (advisory warning, Q14).
 ##
-## Warnings (Q14): money < 0, mh_bank < 0, irrigation shortfall > 0, or water
-## table at 0. Advisory only: they NEVER block, no game over, Next works.
+## Warnings (Q14): money < 0, mh_bank < 0, live irrigation-capacity
+## shortfall (demand above well capacity, recomputed from current counts so
+## placing a well clears it immediately, like money/mh), or water table at 0.
+## Advisory only: they NEVER block, no game over, Next works. The monthly
+## report separately carries the realized last-month shortfall (_last_unmet).
 ## Wind is display-only (Q12): deterministic from month_index, zero effect.
 
 const TUNING_PATH := "res://data/tuning.json"
@@ -245,6 +248,19 @@ func advance_month() -> Dictionary:
 	}
 
 
+## Live capacity gap: demand above installed pump capacity, from current
+## counts. Placement updates it immediately (a new well clears it); the
+## table stock and last-month realized shortfall are monthly results.
+func capacity_shortfall() -> float:
+	var cap := 0.0
+	var dem := 0.0
+	if _items.has("well_l1"):
+		cap = _num(_items["well_l1"], "pump_gal_per_mo") * wells
+	if _items.has("mesquite"):
+		dem = _num(_items["mesquite"], "water_need_gal_per_mo") * mesquite
+	return maxf(dem - cap, 0.0)
+
+
 ## Red-banner text, or "" when all clear. Advisory only (Q14: no game over).
 func warning_text() -> String:
 	if not _ready:
@@ -254,8 +270,9 @@ func warning_text() -> String:
 		parts.append("Money negative ($%.0f)" % money)
 	if mh_bank < 0.0:
 		parts.append("Manhours negative (%.0f mh)" % mh_bank)
-	if _last_unmet > 0.0:
-		parts.append("Irrigation shortfall %.0f gal" % _last_unmet)
+	var gap := capacity_shortfall()
+	if gap > 0.0:
+		parts.append("Irrigation shortfall %.0f gal" % gap)
 	if water_gal <= 0.0:
 		parts.append("Water table depleted")
 	if parts.is_empty():

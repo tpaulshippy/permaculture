@@ -35,4 +35,7 @@ PASS: negative manhours raise banner
 PASS: yield sim sets up
 PASS: no yield before month 12
 PASS: mesquite yields $12 from month 12
+PASS: capacity sim sets up
+PASS: uncovered demand warns before any Next
+PASS: placing a well clears the shortfall
 HUD sim test: all checks passed.
