@@ -12,7 +12,12 @@ def check(cond, msg):
         fails.append(msg)
 
 def is_num(x):
-    return isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x)
+    if isinstance(x, bool) or not isinstance(x, (int, float)):
+        return False
+    try:
+        return math.isfinite(x)
+    except OverflowError:
+        return False
 
 try:
     r = json.loads((ROOT / "data/sonoran_rainfall.json").read_text())
@@ -44,7 +49,7 @@ if any(k not in r for k in ("months", "rainfall_mm", "rainfall_in", "annual_mm",
 
 check(r.get("units") == "mm/month", "rainfall units are mm/month")
 check(len(set(r["months"])) == 12, "month labels are 12 unique names (season lookups use .index)")
-check(all(v >= 0 for v in r["rainfall_mm"]), "all rainfall values >= 0")
+check(all(v >= 0 for v in r["rainfall_mm"]) and all(v >= 0 for v in r["rainfall_in"]), "all rainfall values >= 0 in both units")
 check(abs(sum(r["rainfall_mm"]) - r["annual_mm"]) < 0.5, f"annual_mm {r['annual_mm']} ~= sum {sum(r['rainfall_mm']):.1f} (12 values rounded to 0.1 mm)")
 try:
     src_text = r.get("source", "")
