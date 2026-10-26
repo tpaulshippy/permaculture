@@ -15,7 +15,17 @@ m = json.loads((ROOT / "data/mesquite.json").read_text())
 
 for k in ("months", "rainfall_mm", "rainfall_in", "annual_mm", "annual_in", "source", "units", "seasons", "station"):
     check(k in r, f"rainfall data has '{k}'")
-if any(k not in r for k in ("months", "rainfall_mm", "rainfall_in", "annual_mm", "annual_in", "seasons", "station")):
+shape_ok = (
+    isinstance(r.get("months"), list) and len(r["months"]) == 12 and all(isinstance(x, str) for x in r["months"])
+    and isinstance(r.get("rainfall_mm"), list) and len(r["rainfall_mm"]) == 12 and all(isinstance(x, (int, float)) for x in r["rainfall_mm"])
+    and isinstance(r.get("rainfall_in"), list) and len(r["rainfall_in"]) == 12 and all(isinstance(x, (int, float)) for x in r["rainfall_in"])
+    and isinstance(r.get("seasons"), dict)
+    and all(isinstance(r["seasons"].get(s), list) for s in ("winter_rains", "foresummer_drought", "monsoon", "autumn"))
+    and all(lbl in r["months"] for s in ("winter_rains", "foresummer_drought", "monsoon", "autumn") for lbl in r["seasons"][s])
+    and isinstance(r.get("annual_mm"), (int, float)) and isinstance(r.get("annual_in"), (int, float))
+)
+check(shape_ok, "rainfall data values have valid shapes/types/labels")
+if any(k not in r for k in ("months", "rainfall_mm", "rainfall_in", "annual_mm", "annual_in", "seasons", "station")) or not shape_ok:
     print(f"\n{len(fails)} FAILURES (malformed rainfall data)")
     sys.exit(1)
 
