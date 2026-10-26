@@ -1,0 +1,21 @@
+; Engine configuration file.
+; Permaculture terrain MVP (issue #2). Godot 4.x, GDScript only.
+
+config_version=5
+
+[application]
+
+config/name="Permaculture — Terrain MVP"
+config/description="Seeded Sonoran heightmap mesh + D8 water flow MVP (issue #2)."
+run/main_scene="res://scenes/terrain.tscn"
+config/features=PackedStringArray("4.7", "Forward Plus")
+config/icon="res://icon.svg"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+
+[rendering]
+
+renderer/rendering_method="forward_plus"

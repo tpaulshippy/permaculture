@@ -1,0 +1,27 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+=== Terrain MVP headless test (issue #2) ===
+seed=1337 grid=(20, 20) rain=1.0
+height_min=-1.1274 height_max=9.0622
+sinks=13 max_accum=84.0000 mean_moisture=0.2794 water_table_delta=0.1397
+PASS: grid is 20x20 hex equivalent
+PASS: cell count is 400
+PASS: heightfield has one sample per cell
+PASS: fixed seed is deterministic (heights + moisture identical)
+PASS: different seed produces different terrain
+PASS: D8 flow targets are strictly lower neighbors
+PASS: terrain has at least one sink
+PASS: terrain is not all sinks
+PASS: source cells accumulate exactly rain input
+PASS: flow converges (max accumulation exceeds rain)
+PASS: moisture in [0, 1]
+PASS: wettest cell normalizes to moisture 1.0
+PASS: get_moisture_at matches internal array
+PASS: out-of-bounds moisture is 0.0
+PASS: out-of-bounds flow is (-1, -1)
+PASS: get_all_moisture exposes every cell
+PASS: water table delta = mean moisture * coeff
+PASS: water table delta in (0, coeff]
+wash_band_cells=64 wash_band_mean_moisture=0.3879
+PASS: wash band is wetter than terrain average
+ALL TESTS PASSED
