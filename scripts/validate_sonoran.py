@@ -11,6 +11,9 @@ def check(cond, msg):
     if not cond:
         fails.append(msg)
 
+def is_num(x):
+    return isinstance(x, (int, float)) and not isinstance(x, bool)
+
 try:
     r = json.loads((ROOT / "data/sonoran_rainfall.json").read_text())
     m = json.loads((ROOT / "data/mesquite.json").read_text())
@@ -27,12 +30,12 @@ for k in ("months", "rainfall_mm", "rainfall_in", "annual_mm", "annual_in", "sou
     check(k in r, f"rainfall data has '{k}'")
 shape_ok = (
     isinstance(r.get("months"), list) and len(r["months"]) == 12 and all(isinstance(x, str) for x in r["months"])
-    and isinstance(r.get("rainfall_mm"), list) and len(r["rainfall_mm"]) == 12 and all(isinstance(x, (int, float)) for x in r["rainfall_mm"])
-    and isinstance(r.get("rainfall_in"), list) and len(r["rainfall_in"]) == 12 and all(isinstance(x, (int, float)) for x in r["rainfall_in"])
+    and isinstance(r.get("rainfall_mm"), list) and len(r["rainfall_mm"]) == 12 and all(is_num(x) for x in r["rainfall_mm"])
+    and isinstance(r.get("rainfall_in"), list) and len(r["rainfall_in"]) == 12 and all(is_num(x) for x in r["rainfall_in"])
     and isinstance(r.get("seasons"), dict)
     and all(isinstance(r["seasons"].get(s), list) for s in ("winter_rains", "foresummer_drought", "monsoon", "autumn"))
     and all(lbl in r["months"] for s in ("winter_rains", "foresummer_drought", "monsoon", "autumn") for lbl in r["seasons"][s])
-    and isinstance(r.get("annual_mm"), (int, float)) and isinstance(r.get("annual_in"), (int, float))
+    and is_num(r.get("annual_mm")) and is_num(r.get("annual_in"))
 )
 check(shape_ok, "rainfall data values have valid shapes/types/labels")
 if any(k not in r for k in ("months", "rainfall_mm", "rainfall_in", "annual_mm", "annual_in", "seasons", "station")) or not shape_ok:
@@ -86,7 +89,7 @@ check(set(surv.get("optimal_plant_months", [])) <= set(r.get("months", [])), "op
 check(surv.get("foresummer_survival_multiplier") == 0.6 and surv.get("foresummer_survival_multiplier_irrigated") == 1.0, "survival multipliers numeric (0.6 unirrigated, 1.0 at establishment rate)")
 check("establishment_yield_rule" in ext, "yield-during-establishment rule is defined (yield mo 12 vs watering thru mo 18)")
 check("growth_cm_per_year_note" in m, "growth rate is marked as a game-balance representative value")
-check(isinstance(m.get("taproot_m"), (int, float)), "taproot_m is a numeric metric (qualifier in taproot_note)")
+check(is_num(m.get("taproot_m")), "taproot_m is a numeric metric (qualifier in taproot_note)")
 
 try:
     info_text = (ROOT / "docs/sonoran_info.md").read_text()
