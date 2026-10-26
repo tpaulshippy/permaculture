@@ -135,9 +135,10 @@ def check(save: dict, errors: list[str]) -> int:
     else:
         fail(f"hexes must be an array, got {hexes!r}", errors)
 
-    sa = save.get("saved_at", None)
-    if sa is not None and not (isinstance(sa, str) and SAVED_AT_RE.match(sa)):
-        fail(f"saved_at must be an ISO-8601 datetime when present, got {sa!r}", errors)
+    if "saved_at" in save:
+        sa = save["saved_at"]
+        if not (isinstance(sa, str) and SAVED_AT_RE.match(sa)):
+            fail(f"saved_at must be an ISO-8601 datetime when present, got {sa!r}", errors)
 
     return n
 
@@ -195,10 +196,10 @@ def main(argv: list[str]) -> int:
     corrupt: dict = {"version": 999, "seed": -1}
     c_errors: list[str] = []
     check(corrupt, c_errors)
-    if c_errors:
+    if c_errors and any("version" in e for e in c_errors):
         print(f"corrupt-file self-test: correctly REJECTED ({len(c_errors)} errors, e.g. {c_errors[0]})")
     else:
-        fail("corrupt-file self-test: garbage payload was ACCEPTED (must be rejected)", errors)
+        fail("corrupt-file self-test: garbage payload was ACCEPTED or version rule missing (must be rejected)", errors)
 
     if errors:
         print(f"FAIL: {len(errors)} error(s):")

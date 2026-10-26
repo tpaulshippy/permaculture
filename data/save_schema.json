@@ -80,7 +80,7 @@
             "maximum": 5
           },
           "condition": {
-            "description": "Health flag. Omitted = healthy default.",
+            "description": "Health flag. Omitted or explicit null both mean healthy (default).",
             "type": ["string", "null"],
             "enum": ["healthy", "stressed", "dead", null]
           }

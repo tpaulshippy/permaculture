@@ -64,6 +64,7 @@ def block_jsonschema():
 
 
 failures = 0
+skipped: list[str] = []
 try:
     expect_reject("version=true rejected", lambda s: s.update(version=True))
     expect_reject("version='1' rejected", lambda s: s.update(version="1"))
@@ -108,6 +109,7 @@ try:
     expect_accept("seed == 2^53-1 accepted", lambda s: s.update(seed=2**53 - 1))
     expect_reject("saved_at garbage rejected", lambda s: s.update(saved_at="not-a-date"))
     expect_reject("saved_at empty rejected", lambda s: s.update(saved_at=""))
+    expect_reject("saved_at explicit null rejected", lambda s: s.update(saved_at=None))
     expect_accept("saved_at ISO-8601 accepted", None)
     expect_accept(
         "saved_at fractional seconds accepted",
@@ -144,6 +146,7 @@ try:
     try:
         import matplotlib  # noqa: F401
     except ImportError:
+        skipped.append("renderer title (matplotlib not installed)")
         print("SKIP - renderer title check (matplotlib not installed)")
     else:
         import render_save_diagram as rnd  # noqa: E402
@@ -176,4 +179,6 @@ except AssertionError as e:
     failures = 1
 
 print("PASS: all regression checks" if not failures else "FAILURES present")
+if not failures and skipped:
+    print(f"(skipped: {', '.join(skipped)})")
 raise SystemExit(failures)
