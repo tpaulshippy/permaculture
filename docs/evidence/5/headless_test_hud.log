@@ -1,0 +1,41 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+=== HUD turn-sim headless test (issue #5) ===
+PASS: setup loads tuning + rainfall packs
+PASS: sim reports ready after setup
+PASS: money starts at tuning $10000
+PASS: manhours start at tuning 40 mh grant
+PASS: water reserve starts 6000 gal
+PASS: month_index starts at 0
+PASS: no warning at start
+PASS: month 0 is Jan
+PASS: Jan rainfall 21.3 mm
+PASS: rain label text
+PASS: wind label marked display-only
+PASS: reading wind changes no resources
+PASS: house charge ok
+PASS: house deducts $4000
+PASS: house deducts 40 mh grant
+PASS: still no warning after affordable house
+PASS: unknown item rejected
+PASS: advance_month ok
+PASS: month_index increments
+PASS: month 1 is Feb
+PASS: Feb rainfall 21.3 mm
+PASS: monthly labor = +160 house - upkeep
+PASS: well pumps water on Next
+PASS: over-demand depletes table -> warning text
+PASS: warning banner text set
+PASS: warning cites no-game-over rule
+PASS: Next still works while warned (no game over)
+PASS: second sim sets up
+PASS: negative money raises banner
+PASS: third sim sets up
+PASS: negative manhours raise banner
+PASS: yield sim sets up
+PASS: no yield before month 12
+PASS: mesquite yields $12 from month 12
+PASS: capacity sim sets up
+PASS: uncovered demand warns before any Next
+PASS: placing a well clears the shortfall
+HUD sim test: all checks passed.
