@@ -1,0 +1,14 @@
+scripts/main.gd
+  h_6bbd00fe0a456a 55,168-169,433-435,443,447,452-454,519-522,555-558,562,565-571
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a10ddd994003aef878fb13281e74f7c72652108c",
+  "prompts": {},
+  "humans": {
+    "h_6bbd00fe0a456a": {
+      "author": "Paul Shippy <pshippy@gmail.com>"
+    }
+  }
+}
