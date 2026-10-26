@@ -20,9 +20,10 @@ check(abs(sum(r["rainfall_mm"]) - r["annual_mm"]) < 1.5, f"annual_mm {r['annual_
 check("weather.gov" in r.get("source", ""), "rainfall cites NWS source with URL")
 check(len(r.get("rainfall_in", [])) == 12, "rainfall_in has 12 source values")
 check(abs(sum(r["rainfall_in"]) - r["annual_in"]) < 0.05, "annual_in matches monthly sum")
-# monsoon peak check (Jul-Sep dominate)
-monsoon = sum(r["rainfall_mm"][6:9])
-check(monsoon > sum(r["rainfall_mm"]) * 0.45, f"monsoon Jul-Sep share {monsoon/sum(r['rainfall_mm']):.0%} > 45%")
+# monsoon peak check (seasons["monsoon"] months dominate)
+monsoon_months = r.get("seasons", {}).get("monsoon", ["Jul", "Aug", "Sep"])
+monsoon = sum(r["rainfall_mm"][r["months"].index(m)] for m in monsoon_months)
+check(monsoon > sum(r["rainfall_mm"]) * 0.45, f"monsoon {'/'.join(monsoon_months)} share {monsoon/sum(r['rainfall_mm']):.0%} > 45%")
 
 check(m.get("species") == "Prosopis velutina", "mesquite species set")
 check(m.get("nitrogen_fixer") is True, "mesquite nitrogen_fixer true")

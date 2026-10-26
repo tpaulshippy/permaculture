@@ -6,7 +6,7 @@ PASS: annual_mm 269.5 ~= sum 269.3
 PASS: rainfall cites NWS source with URL
 PASS: rainfall_in has 12 source values
 PASS: annual_in matches monthly sum
-PASS: monsoon Jul-Sep share 52% > 45%
+PASS: monsoon Jul/Aug/Sep share 52% > 45%
 PASS: mesquite species set
 PASS: mesquite nitrogen_fixer true
 PASS: mesquite has proposed game stats (no tuning.json overwrite)
