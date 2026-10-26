@@ -2,25 +2,16 @@ class_name FutureStubs
 extends RefCounted
 ## Stub APIs for systems owned by OTHER issues (issue #2 constraint).
 ##
-## Hex overlay gameplay, store, HUD, save, and export presets are explicitly
-## out of scope here. These stubs exist so callers have a stable interface
-## to program against; every method warns and returns a safe default.
+## The hex overlay (scripts/hex_grid.gd) and the scene HUD (scripts/main.gd)
+## are implemented since issue #3; the remaining stubs are the store, save,
+## and export presets. These exist so callers have a stable interface to
+## program against; every method warns and returns a safe default.
 
 const Water := preload("res://scripts/terrain_water.gd")
 
 
-static func hex_overlay_data(_water: Water) -> Dictionary:
-	push_warning("FutureStubs.hex_overlay_data: hex overlay gameplay is not implemented (deferred).")
-	return {}
-
-
 static func store_catalog() -> Dictionary:
 	push_warning("FutureStubs.store_catalog: store is not implemented (deferred).")
-	return {}
-
-
-static func hud_state(_water: Water) -> Dictionary:
-	push_warning("FutureStubs.hud_state: HUD is not implemented (deferred).")
 	return {}
 
 
