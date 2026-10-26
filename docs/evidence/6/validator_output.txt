@@ -24,6 +24,7 @@ PASS: mesquite nitrogen_fixer true
 PASS: mesquite has proposed game stats (no tuning.json overwrite)
 PASS: mesquite extensions is an object
 PASS: mesquite survival is an object when present
+PASS: survival month lists are lists of month-name strings
 PASS: mesquite cost/manhours match feat/4 tuning (40 USD, 2 mh)
 PASS: mesquite water need matches tuning (250 gal/mo)
 PASS: mesquite yield matches tuning ($12/mo from month 12)

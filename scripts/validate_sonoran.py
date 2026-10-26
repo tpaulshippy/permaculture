@@ -71,7 +71,9 @@ ext = g.get("extensions") if isinstance(g.get("extensions"), dict) else None
 check(isinstance(ext, dict), "mesquite extensions is an object")
 surv_raw = ext.get("survival") if isinstance(ext, dict) else None
 check(surv_raw is None or isinstance(surv_raw, dict), "mesquite survival is an object when present")
-if ext is None or not (surv_raw is None or isinstance(surv_raw, dict)):
+lists_ok = surv_raw is None or all(isinstance(surv_raw.get(k), list) and all(isinstance(x, str) for x in surv_raw[k]) for k in ("optimal_plant_months", "foresummer_penalty_months"))
+check(lists_ok, "survival month lists are lists of month-name strings")
+if ext is None or not (surv_raw is None or isinstance(surv_raw, dict)) or not lists_ok:
     print(f"\n{len(fails)} FAILURES (malformed mesquite data)")
     sys.exit(1)
 ext, surv = ext or {}, surv_raw or {}
@@ -105,7 +107,11 @@ fingerprint = hashlib.sha256(json.dumps({"months": r["months"], "rainfall_mm": r
                                           "annual_mm": r["annual_mm"], "station": r["station"]},
                                          sort_keys=True).encode()).hexdigest()
 sidecar = ROOT / "docs/evidence/6/rainfall_chart.sha256"
-check(sidecar.exists() and sidecar.read_text().strip() == fingerprint, "evidence chart fingerprint matches current rainfall data (regen plot after data changes)")
+try:
+    sidecar_ok = sidecar.exists() and sidecar.read_text().strip() == fingerprint
+except (OSError, ValueError):
+    sidecar_ok = False
+check(sidecar_ok, "evidence chart fingerprint matches current rainfall data (regen plot after data changes)")
 
 print(f"\n{'ALL CHECKS PASSED' if not fails else f'{len(fails)} FAILURES'}")
 sys.exit(1 if fails else 0)
