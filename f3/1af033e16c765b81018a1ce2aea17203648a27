@@ -1,0 +1,16 @@
+docs/evidence/6/validator_output.txt
+  h_6bbd00fe0a456a 19,45
+scripts/validate_sonoran.py
+  h_6bbd00fe0a456a 58,98,105-109
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f31af033e16c765b81018a1ce2aea17203648a27",
+  "prompts": {},
+  "humans": {
+    "h_6bbd00fe0a456a": {
+      "author": "Paul Shippy <pshippy@gmail.com>"
+    }
+  }
+}
