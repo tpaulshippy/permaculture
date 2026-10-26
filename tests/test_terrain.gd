@@ -4,6 +4,8 @@ extends SceneTree
 ## Exit code 0 = all checks passed, 1 = at least one failure.
 
 const WaterScript := preload("res://scripts/terrain_water.gd")
+const MeshScript := preload("res://scripts/terrain_mesh.gd")
+const Stubs := preload("res://scripts/future_stubs.gd")
 const Cfg := preload("res://scripts/terrain_config.gd")
 
 var _failures := 0
@@ -64,6 +66,9 @@ func _init() -> void:
 			var down := water.get_flow_to(cell)
 			if down == Vector2i(-1, -1):
 				continue
+			if not water.in_bounds(down.x, down.y):
+				d8_valid = false
+				break
 			var dx := absi(down.x - x)
 			var dy := absi(down.y - y)
 			if dx > 1 or dy > 1 or (dx == 0 and dy == 0):
@@ -122,8 +127,75 @@ func _init() -> void:
 		" wash_band_mean_moisture=%.4f" % band_mean)
 	_check(band_mean > water.mean_moisture(), "wash band is wetter than terrain average")
 
+	# Config is the single tuning source: defaults track TerrainConfig.
+	var defaults = WaterScript.new()
+	_check(defaults.grid_w == Cfg.GRID_W and defaults.grid_h == Cfg.GRID_H,
+		"TerrainWater defaults track TerrainConfig grid size")
+	_check(defaults.seed_used == Cfg.FIXED_SEED and defaults.rain_amount == Cfg.DEFAULT_RAIN,
+		"TerrainWater defaults track TerrainConfig seed and rain")
+
+	# Degenerate grids are rejected without crashing.
+	var tiny = WaterScript.new(1, 5)
+	tiny.generate()
+	_check(tiny.heights.is_empty(), "1-wide grid is rejected (no heightfield)")
+	_check(tiny.get_height_at(Vector2i(0, 0)) == 0.0,
+		"rejected grid height reads as 0.0")
+	var empty = WaterScript.new(0, 0)
+	empty.generate()
+	_check(empty.heights.is_empty() and empty.mean_moisture() == 0.0,
+		"0x0 grid is rejected (no heightfield, zero moisture)")
+
+	# Negative rain clamps to zero instead of producing nonsense.
+	var dry = WaterScript.new(Cfg.GRID_W, Cfg.GRID_H)
+	dry.generate(Cfg.FIXED_SEED, -2.0)
+	_check(dry.rain_amount == 0.0, "negative rain clamps to 0")
+	var dry_max := 0.0
+	for v in dry.moisture:
+		dry_max = maxf(dry_max, v)
+	_check(dry_max == 0.0, "clamped rain yields zero moisture everywhere")
+
+	# D8 follows steepest descent, not merely the lowest neighbor: an
+	# orthogonal drop of 0.2 (slope 0.2) must beat a diagonal drop of 0.25
+	# (slope 0.25 / sqrt(2) ~= 0.177).
+	var slope_test = WaterScript.new(3, 3)
+	slope_test.heights.resize(9)
+	slope_test.heights.fill(5.0)
+	slope_test.heights[slope_test.idx(1, 1)] = 2.0
+	slope_test.heights[slope_test.idx(2, 1)] = 1.8
+	slope_test.heights[slope_test.idx(2, 2)] = 1.75
+	slope_test.compute_d8()
+	_check(slope_test.get_flow_to(Vector2i(1, 1)) == Vector2i(2, 1),
+		"D8 follows steepest descent (orthogonal beats deeper diagonal)")
+
+	# Mesh builder smoke test in both render modes.
+	var mesh_terrain: ArrayMesh = MeshScript.build_array_mesh(water, MeshScript.RenderMode.TERRAIN)
+	var mesh_moisture: ArrayMesh = MeshScript.build_array_mesh(water, MeshScript.RenderMode.MOISTURE)
+	_check(mesh_terrain.get_surface_count() == 1 and mesh_moisture.get_surface_count() == 1,
+		"mesh builder emits one surface per render mode")
+	_check(mesh_terrain.surface_get_arrays(0)[Mesh.ARRAY_VERTEX].size() == water.cell_count(),
+		"mesh has one vertex per cell")
+
+	# Perimeter normals use a one-sided difference: on an x-ramp the corner
+	# normal must be (-0.5, 1, 0) normalized, not the halved central value.
+	var ramp = WaterScript.new(3, 3)
+	ramp.heights.resize(9)
+	for yy in range(3):
+		for xx in range(3):
+			ramp.heights[yy * 3 + xx] = float(xx)
+	var corner_n: Vector3 = MeshScript.grid_normal(ramp, 0, 0)
+	_check(absf(corner_n.x - (-0.5 / sqrt(1.25))) < 1e-5 and absf(corner_n.z) < 1e-6,
+		"corner normal uses one-sided derivative")
+
+	# Deferred-system stubs keep their safe-default contract with an explicit
+	# error channel on load.
+	_check(Stubs.save_game("slot1", water) == ERR_UNAVAILABLE,
+		"save_game stub returns ERR_UNAVAILABLE")
+	var load_res: Dictionary = Stubs.load_game("slot1")
+	_check(load_res.get("ok") == false and load_res.get("error") == ERR_UNAVAILABLE,
+		"load_game stub reports explicit error channel")
+
 	if _failures == 0:
 		print("ALL TESTS PASSED")
 	else:
 		printerr("TESTS FAILED: %d failure(s)" % _failures)
-	quit(_failures)
+	quit(0 if _failures == 0 else 1)

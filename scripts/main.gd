@@ -17,15 +17,16 @@ const CAPTURE_SIZE := Vector2i(1280, 720)
 var _capture_mode := ""
 var _capture_path := ""
 var _frames := 0
+var _capture_failed := false
 var _offscreen: SubViewport
 
 
 func _ready() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--capture-mode="):
-			_capture_mode = arg.get_slice("=", 1)
+			_capture_mode = arg.trim_prefix("--capture-mode=")
 		elif arg.begins_with("--capture-path="):
-			_capture_path = arg.get_slice("=", 1)
+			_capture_path = arg.trim_prefix("--capture-path=")
 	var mode: int = MeshScript.RenderMode.TERRAIN
 	if _capture_mode == "moisture":
 		mode = MeshScript.RenderMode.MOISTURE
@@ -96,7 +97,8 @@ func _process(_delta: float) -> void:
 		var img := _offscreen.get_texture().get_image()
 		var err := img.save_png(_capture_path)
 		if err != OK:
+			_capture_failed = true
 			push_error("Capture failed: %s (err %d)" % [_capture_path, err])
 		else:
 			print("Captured (%dx%d): %s" % [img.get_width(), img.get_height(), _capture_path])
-		get_tree().quit()
+		get_tree().quit(1 if _capture_failed else 0)

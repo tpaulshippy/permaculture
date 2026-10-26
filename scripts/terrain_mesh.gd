@@ -9,9 +9,10 @@ extends Node3D
 enum RenderMode { TERRAIN, MOISTURE }
 
 const Cfg := preload("res://scripts/terrain_config.gd")
+const Water := preload("res://scripts/terrain_water.gd")
 
 
-static func build_array_mesh(water, mode: int) -> ArrayMesh:
+static func build_array_mesh(water: Water, mode: int) -> ArrayMesh:
 	var w: int = water.grid_w
 	var h: int = water.grid_h
 	var cell: float = Cfg.CELL_SIZE
@@ -55,7 +56,7 @@ static func build_array_mesh(water, mode: int) -> ArrayMesh:
 	return mesh
 
 
-static func grid_normal(water, x: int, y: int) -> Vector3:
+static func grid_normal(water: Water, x: int, y: int) -> Vector3:
 	var w: int = water.grid_w
 	var grid_h: int = water.grid_h
 	var heights: PackedFloat32Array = water.heights
@@ -64,8 +65,14 @@ static func grid_normal(water, x: int, y: int) -> Vector3:
 	var hr: float = heights[y * w + mini(x + 1, w - 1)]
 	var hd: float = heights[maxi(y - 1, 0) * w + x]
 	var hu: float = heights[mini(y + 1, grid_h - 1) * w + x]
+	# Central difference in the interior, one-sided difference at the
+	# perimeter where the missing neighbor is clamped to the edge sample.
 	var dhdx := (hr - hl) / (2.0 * cell)
+	if x <= 0 or x >= w - 1:
+		dhdx = (hr - hl) / cell
 	var dhdz := (hu - hd) / (2.0 * cell)
+	if y <= 0 or y >= grid_h - 1:
+		dhdz = (hu - hd) / cell
 	return Vector3(-dhdx, 1.0, -dhdz).normalized()
 
 

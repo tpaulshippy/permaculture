@@ -21,10 +21,10 @@ const NEIGHBOR_OFFSETS: Array[Vector2i] = [
 
 const OOB_FLOW := Vector2i(-1, -1)
 
-var grid_w: int = 20
-var grid_h: int = 20
-var seed_used: int = 0
-var rain_amount: float = 1.0
+var grid_w: int = Cfg.GRID_W
+var grid_h: int = Cfg.GRID_H
+var seed_used: int = Cfg.FIXED_SEED
+var rain_amount: float = Cfg.DEFAULT_RAIN
 var heights := PackedFloat32Array()
 var flow_to := PackedInt32Array()
 var accumulation := PackedFloat32Array()
@@ -36,7 +36,7 @@ var min_height := 0.0
 var max_height := 1.0
 
 
-func _init(p_w: int = 20, p_h: int = 20) -> void:
+func _init(p_w: int = Cfg.GRID_W, p_h: int = Cfg.GRID_H) -> void:
 	grid_w = p_w
 	grid_h = p_h
 
@@ -54,7 +54,10 @@ func in_bounds(x: int, y: int) -> bool:
 
 
 ## Build the deterministic Sonoran heightfield, then run the water model.
-func generate(p_seed: int = 1337, p_rain: float = 1.0) -> void:
+func generate(p_seed: int = Cfg.FIXED_SEED, p_rain: float = Cfg.DEFAULT_RAIN) -> void:
+	if grid_w < 2 or grid_h < 2:
+		push_error("TerrainWater.generate: grid %dx%d is degenerate, need at least 2x2." % [grid_w, grid_h])
+		return
 	seed_used = p_seed
 	rain_amount = p_rain
 	var noise := FastNoiseLite.new()
@@ -62,14 +65,14 @@ func generate(p_seed: int = 1337, p_rain: float = 1.0) -> void:
 	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
 	noise.frequency = Cfg.NOISE_FREQUENCY
 	noise.fractal_octaves = Cfg.NOISE_OCTAVES
-	noise.fractal_gain = 0.5
+	noise.fractal_gain = Cfg.NOISE_FRACTAL_GAIN
 	heights.resize(cell_count())
 	for y in range(grid_h):
 		for x in range(grid_w):
 			var fx := float(x) / float(grid_w - 1)
 			var fy := float(y) / float(grid_h - 1)
 			# Bajada slope: high in the NW, low in the SE.
-			var t := 0.6 * fx + 0.4 * fy
+			var t := Cfg.SLOPE_X_WEIGHT * fx + Cfg.SLOPE_Y_WEIGHT * fy
 			var h := lerpf(Cfg.SLOPE_HIGH, Cfg.SLOPE_LOW, t)
 			h += noise.get_noise_2d(float(x), float(y)) * Cfg.NOISE_AMPLITUDE
 			# Rocky highland bump in the NW (deterministic).
@@ -93,30 +96,45 @@ func generate(p_seed: int = 1337, p_rain: float = 1.0) -> void:
 
 ## Rain input -> D8 flow -> accumulation -> moisture + water table delta.
 func apply_rain(p_rain: float) -> void:
+	if p_rain < 0.0:
+		push_warning("TerrainWater.apply_rain: negative rain %.3f clamped to 0." % p_rain)
+		p_rain = 0.0
 	rain_amount = p_rain
 	compute_d8()
 	compute_accumulation()
 	compute_moisture()
 
 
-## D8: each cell drains to its lowest lower neighbor, else it is a sink.
+## D8: each cell drains to its steepest-descent lower neighbor (drop over
+## distance, 1.0 orthogonal / sqrt(2) diagonal), else it is a sink. Fixed
+## neighbor order doubles as the tie-break order for equal slopes.
 func compute_d8() -> void:
 	flow_to.resize(cell_count())
 	flow_to.fill(-1)
 	sink_count = 0
+	if heights.size() != cell_count():
+		push_error("TerrainWater.compute_d8: heightfield not generated.")
+		return
 	for y in range(grid_h):
 		for x in range(grid_w):
 			var i := idx(x, y)
 			var best := -1
-			var best_h := heights[i]
+			var best_slope := 0.0
 			for off in NEIGHBOR_OFFSETS:
 				var nx := x + off.x
 				var ny := y + off.y
 				if not in_bounds(nx, ny):
 					continue
 				var j := idx(nx, ny)
-				if heights[j] < best_h:
-					best_h = heights[j]
+				var drop := heights[i] - heights[j]
+				if drop <= 0.0:
+					continue
+				var dist := 1.0
+				if off.x != 0 and off.y != 0:
+					dist = sqrt(2.0)
+				var slope := drop / dist
+				if slope > best_slope:
+					best_slope = slope
 					best = j
 			flow_to[i] = best
 			if best == -1:
@@ -169,7 +187,10 @@ func get_grid_size() -> Vector2i:
 func get_moisture_at(cell: Vector2i) -> float:
 	if not in_bounds(cell.x, cell.y):
 		return 0.0
-	return moisture[idx(cell.x, cell.y)]
+	var i := idx(cell.x, cell.y)
+	if i < 0 or i >= moisture.size():
+		return 0.0
+	return moisture[i]
 
 
 func get_all_moisture() -> Dictionary:
@@ -183,20 +204,29 @@ func get_all_moisture() -> Dictionary:
 func get_height_at(cell: Vector2i) -> float:
 	if not in_bounds(cell.x, cell.y):
 		return 0.0
-	return heights[idx(cell.x, cell.y)]
+	var i := idx(cell.x, cell.y)
+	if i < 0 or i >= heights.size():
+		return 0.0
+	return heights[i]
 
 
 func get_accumulation_at(cell: Vector2i) -> float:
 	if not in_bounds(cell.x, cell.y):
 		return 0.0
-	return accumulation[idx(cell.x, cell.y)]
+	var i := idx(cell.x, cell.y)
+	if i < 0 or i >= accumulation.size():
+		return 0.0
+	return accumulation[i]
 
 
 ## Downstream cell, or Vector2i(-1, -1) for sinks / out-of-bounds.
 func get_flow_to(cell: Vector2i) -> Vector2i:
 	if not in_bounds(cell.x, cell.y):
 		return OOB_FLOW
-	var d := flow_to[idx(cell.x, cell.y)]
+	var i := idx(cell.x, cell.y)
+	if i < 0 or i >= flow_to.size():
+		return OOB_FLOW
+	var d := flow_to[i]
 	if d < 0:
 		return OOB_FLOW
 	return Vector2i(d % grid_w, d / grid_w)
