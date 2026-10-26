@@ -1,0 +1,28 @@
+README.md
+  h_6bbd00fe0a456a 13,34
+docs/evidence/3/README.md
+  h_6bbd00fe0a456a 24
+docs/evidence/3/demo_console.log
+  h_6bbd00fe0a456a 4-7
+docs/evidence/3/headless_test_hex.log
+  h_6bbd00fe0a456a 10,18,42-44,68-69
+scripts/future_stubs.gd
+  h_6bbd00fe0a456a 5-8
+scripts/hex_grid.gd
+  h_6bbd00fe0a456a 46-48,95-104,208,214,220,226,233-234,243,249,405-406
+scripts/main.gd
+  h_6bbd00fe0a456a 54,162-176,507-511,514,534-536,539-541,546-560
+tests/test_hex.gd
+  h_6bbd00fe0a456a 158-172,238,240-255,257-263
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a04b53769471632061040f271f63eff204effe49",
+  "prompts": {},
+  "humans": {
+    "h_6bbd00fe0a456a": {
+      "author": "Paul Shippy <pshippy@gmail.com>"
+    }
+  }
+}
