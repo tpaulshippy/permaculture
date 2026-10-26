@@ -134,12 +134,15 @@ def main():
 
     # opening labor-grant feasibility: the grant must cover the first build.
     grant = base.get("starting_manhours_mh")
+    house_build = h.get("build_manhours")
     if not is_num(grant):
         fail(f"sim_baseline.starting_manhours_mh must be a finite number, got {grant!r}")
-    elif grant < h.get("build_manhours", float("inf")):
-        fail(f"starting grant {grant} mh cannot cover first house build {h.get('build_manhours')} mh")
+    elif not is_num(house_build):
+        fail(f"house.build_manhours must be a finite number (mh) for the grant check, got {house_build!r}")
+    elif grant < house_build:
+        fail(f"starting grant {grant} mh cannot cover first house build {house_build} mh")
     else:
-        print(f"OK: starting grant {grant} mh covers house build {h.get('build_manhours')} mh")
+        print(f"OK: starting grant {grant} mh covers house build {house_build} mh")
 
     # balance arithmetic: 1 house + 1 well + 2 ditch + 4 mesquite
     # (explicit conditionals: must also hold under `python -O`).
