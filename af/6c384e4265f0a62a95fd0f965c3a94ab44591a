@@ -1,0 +1,16 @@
+docs/evidence/8/validator.log
+  h_6bbd00fe0a456a 38,42-46
+tools/validate_android_preset.py
+  h_6bbd00fe0a456a 104-108,110,118-122,282-283,291-305
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "af6c384e4265f0a62a95fd0f965c3a94ab44591a",
+  "prompts": {},
+  "humans": {
+    "h_6bbd00fe0a456a": {
+      "author": "Paul Shippy <pshippy@gmail.com>"
+    }
+  }
+}
