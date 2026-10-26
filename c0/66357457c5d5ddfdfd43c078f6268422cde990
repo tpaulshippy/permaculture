@@ -1,0 +1,30 @@
+.gitignore
+  h_6bbd00fe0a456a 3-8
+docs/android.md
+  h_6bbd00fe0a456a 1-76
+docs/evidence/8/validator.log
+  h_6bbd00fe0a456a 1-38
+export_presets.cfg
+  h_6bbd00fe0a456a 1-202
+icons/android_adaptive_background_432x432.png.import
+  h_6bbd00fe0a456a 1-40
+icons/android_adaptive_foreground_432x432.png.import
+  h_6bbd00fe0a456a 1-40
+icons/android_main_192x192.png.import
+  h_6bbd00fe0a456a 1-40
+project.godot
+  h_6bbd00fe0a456a 18-20,25-28
+tools/validate_android_preset.py
+  h_6bbd00fe0a456a 1-202
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c066357457c5d5ddfdfd43c078f6268422cde990",
+  "prompts": {},
+  "humans": {
+    "h_6bbd00fe0a456a": {
+      "author": "Paul Shippy <pshippy@gmail.com>"
+    }
+  }
+}
