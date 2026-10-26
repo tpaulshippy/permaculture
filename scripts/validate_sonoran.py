@@ -13,6 +13,12 @@ def check(cond, msg):
 r = json.loads((ROOT / "data/sonoran_rainfall.json").read_text())
 m = json.loads((ROOT / "data/mesquite.json").read_text())
 
+for k in ("months", "rainfall_mm", "rainfall_in", "annual_mm", "annual_in", "source", "units", "seasons", "station"):
+    check(k in r, f"rainfall data has '{k}'")
+if any(k not in r for k in ("months", "rainfall_mm", "rainfall_in", "annual_mm", "annual_in", "seasons", "station")):
+    print(f"\n{len(fails)} FAILURES (malformed rainfall data)")
+    sys.exit(1)
+
 check(r.get("units") == "mm/month", "rainfall units are mm/month")
 check(len(r.get("rainfall_mm", [])) == 12, "rainfall_mm has 12 values")
 check(len(r.get("months", [])) == 12, "months has 12 labels")

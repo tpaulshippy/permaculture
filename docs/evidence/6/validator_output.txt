@@ -1,3 +1,12 @@
+PASS: rainfall data has 'months'
+PASS: rainfall data has 'rainfall_mm'
+PASS: rainfall data has 'rainfall_in'
+PASS: rainfall data has 'annual_mm'
+PASS: rainfall data has 'annual_in'
+PASS: rainfall data has 'source'
+PASS: rainfall data has 'units'
+PASS: rainfall data has 'seasons'
+PASS: rainfall data has 'station'
 PASS: rainfall units are mm/month
 PASS: rainfall_mm has 12 values
 PASS: months has 12 labels
