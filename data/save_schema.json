@@ -74,13 +74,13 @@
             "minLength": 1
           },
           "growth_stage": {
-            "description": "0 = seedling/just placed .. 5 = mature. Null/omitted = not applicable.",
+            "description": "0 = seedling/just placed .. 5 = mature. Null/omitted = not applicable. Meaningless without a plant_id; loaders ignore it when plant_id is null/absent.",
             "type": ["integer", "null"],
             "minimum": 0,
             "maximum": 5
           },
           "condition": {
-            "description": "Health flag. Omitted or explicit null both mean healthy (default).",
+            "description": "Health flag. Omitted or explicit null both mean healthy (default). Meaningless without a plant_id; loaders ignore it when plant_id is null/absent.",
             "type": ["string", "null"],
             "enum": ["healthy", "stressed", "dead", null]
           }

@@ -69,6 +69,13 @@ try:
     expect_reject("version=true rejected", lambda s: s.update(version=True))
     expect_reject("version='1' rejected", lambda s: s.update(version="1"))
     expect_accept("version=1 accepted", None)
+    expect_accept("seed=1.0 accepted (JSON Schema integer)", lambda s: s.update(seed=14.0))
+    expect_reject("seed=1.5 rejected", lambda s: s.update(seed=14.5))
+    expect_accept("month_index=2.0 accepted", lambda s: s.update(month_index=2.0))
+    expect_accept(
+        "hex q/r/growth integral floats accepted",
+        lambda s: (s["hexes"][0].update(q=0.0, r=0.0), s["hexes"][2].update(growth_stage=3.0)),
+    )
 
     for field in ("money", "manhours", "water_table"):
         s = copy.deepcopy(BASE)

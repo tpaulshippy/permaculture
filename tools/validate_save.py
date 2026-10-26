@@ -39,6 +39,17 @@ def is_finite_number(x: object) -> bool:
         return True
     return isinstance(x, float) and math.isfinite(x)
 
+
+def is_int_like(x: object) -> bool:
+    """True for JSON values the schema's `integer` type accepts: ints (never
+    bool) or floats with zero fractional part (`1.0` is a valid JSON Schema
+    integer, and Python parses it as float)."""
+    if isinstance(x, bool):
+        return False
+    if isinstance(x, int):
+        return True
+    return isinstance(x, float) and x.is_integer()
+
 # ISO-8601 UTC/offset datetime, e.g. 2026-10-25T00:00:00Z or +00:00 with optional fraction.
 SAVED_AT_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$")
 
@@ -67,7 +78,7 @@ def check(save: dict, errors: list[str]) -> int:
         fail(f"version must be 1, got {save.get('version')!r}", errors)
 
     seed = save.get("seed")
-    if not (isinstance(seed, int) and not isinstance(seed, bool) and 0 <= seed <= MAX_SEED):
+    if not (is_int_like(seed) and 0 <= seed <= MAX_SEED):
         fail(f"seed must be a non-negative int <= 2^53-1 ({MAX_SEED}), got {seed!r}", errors)
 
     biome = save.get("biome_id")
@@ -75,7 +86,7 @@ def check(save: dict, errors: list[str]) -> int:
         fail(f"biome_id must be a non-empty string, got {biome!r}", errors)
 
     mi = save.get("month_index")
-    if not (isinstance(mi, int) and not isinstance(mi, bool) and mi >= 0):
+    if not (is_int_like(mi) and mi >= 0):
         fail(f"month_index must be a non-negative int, got {mi!r}", errors)
 
     res = save.get("resources")
@@ -112,11 +123,11 @@ def check(save: dict, errors: list[str]) -> int:
                 if k not in ("q", "r", "structure_id", "plant_id", "growth_stage", "condition"):
                     fail(f"{where} unknown property: {k!r}", errors)
             q, r = hx.get("q"), hx.get("r")
-            if not (isinstance(q, int) and not isinstance(q, bool)):
+            if not is_int_like(q):
                 fail(f"{where}.q must be int, got {q!r}", errors)
-            if not (isinstance(r, int) and not isinstance(r, bool)):
+            if not is_int_like(r):
                 fail(f"{where}.r must be int, got {r!r}", errors)
-            if isinstance(q, int) and isinstance(r, int) and not isinstance(q, bool) and not isinstance(r, bool):
+            if is_int_like(q) and is_int_like(r):
                 if (q, r) in seen:
                     fail(f"{where} duplicate axial coord (q={q}, r={r})", errors)
                 seen.add((q, r))
@@ -125,7 +136,7 @@ def check(save: dict, errors: list[str]) -> int:
                 if v is not None and not (isinstance(v, str) and len(v) >= 1):
                     fail(f"{where}.{f} must be string or null, got {v!r}", errors)
             g = hx.get("growth_stage")
-            if g is not None and not (isinstance(g, int) and not isinstance(g, bool) and 0 <= g <= 5):
+            if g is not None and not (is_int_like(g) and 0 <= g <= 5):
                 fail(f"{where}.growth_stage must be int 0..5 or null, got {g!r}", errors)
             c = hx.get("condition", None)
             # Type-guard before membership: unhashable values (list/dict) must
