@@ -21,7 +21,7 @@ Tree removal (dead or alive) costs 1 mh (per #1); not in table.
 Setup: 1× house + 1× well L1 + 2× ditch/berm + 4× mesquite:
 
 - Money upfront: 4000 + 2500 + 2·400 + 4·40 = **$7460** (start $10,000 → $2540 left)
-- Labor upfront: 40 + 24 + 2·12 + 4·2 = **96 mh** (build order: house first, player starts at 0 mh)
+- Labor upfront: 40 + 24 + 2·12 + 4·2 = **96 mh** (build order: house first, paid from the 40 mh starting grant in `sim_baseline`)
 - Monthly labor: upkeep 8+4+2·2+4·1 = 20 mh vs 160 provided → **140 mh free** for expansion
 - Monthly money: −80 −15 + 0 (trees pre-yield) = **−$95/mo**; at maturity +4·12 = **−$47/mo** (slight burn → pressure to scale to ~8–10 trees/well, 5-yr arc per #1)
 - Monthly water: +2500 pump + (50 base + 2·120 capture) − 4·250 demand = **+1790 gal surplus** (room for ~7 more trees per well; over-pumping without swales loses)
@@ -32,9 +32,13 @@ Setup: 1× house + 1× well L1 + 2× ditch/berm + 4× mesquite:
 python3 scripts/validate_tuning.py
 ```
 
-Checks: JSON parses, exactly these 4 item ids, all required fields present with correct units/types,
-house `provides_manhours_per_mo`, well `pump_gal_per_mo`, ditch `retention_percent`, mesquite `water_need_gal_per_mo` + `yield_usd_per_mo`,
-and the balance-check arithmetic above. Evidence chart: `docs/evidence/4/store_tuning.png` (generated from `tuning.json`).
+Checks: JSON parses; exactly these 4 item ids, each once (duplicates and count mismatches fail);
+all required fields present with correct units/types (including `upkeep_usd_per_mo`);
+house `provides_manhours_per_mo`, well `pump_gal_per_mo`, ditch `retention_percent`, mesquite `water_need_gal_per_mo` + `yield_usd_per_mo`;
+nonnegative cost/labor ranges per item; starting-grant (`starting_manhours_mh`) covers the first house build;
+and the balance-check arithmetic above (upfront money/labor, monthly labor, monthly money pre-yield + mature, monthly water surplus).
+It does not check unit-label strings in `meta.units` or seasonal rain variation (fixed 1000 gal/mo reference).
+Evidence chart: `docs/evidence/4/store_tuning.png` (generated from `tuning.json` via `docs/evidence/4/generate_chart.py`, requires `pip install matplotlib`).
 
 ## Full field reference
 

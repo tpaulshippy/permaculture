@@ -1,5 +1,6 @@
-OK: parses (3963 bytes)
+OK: parses (4578 bytes)
 OK: 4 items ['ditch_berm', 'house', 'mesquite', 'well_l1']
-OK: per-item rules (house mh/mo, well pump, ditch retention, mesquite need/yield)
-OK: balance 1+1+2+4 -> $7460, 96mh build, 20mh/mo upkeep, 140mh/mo free
-PASS: data/tuning.json valid (units $, mh, gal/mo, % consistent with water/money/manhours/rain sim)
+OK: per-item rules (house mh/mo, well pump, ditch retention, mesquite need/yield; nonnegative cost/labor)
+OK: starting grant 40 mh covers house build 40 mh
+OK: balance 1+1+2+4 -> $7460, 96mh build, 20mh/mo upkeep, 140mh/mo free, -95/-47$/mo pre/mature, +1790gal/mo water
+PASS: data/tuning.json valid (ids/fields/types, per-item rules, nonnegative ranges, starting-grant feasibility, upfront/labor/monthly-money/monthly-water balance)
