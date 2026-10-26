@@ -15,7 +15,17 @@ config/icon="res://icon.svg"
 
 window/size/viewport_width=1280
 window/size/viewport_height=720
+; Terrain viewer is landscape-first; sensor_landscape (4) lets the device use
+; either landscape rotation. Shared setting, no per-platform fork.
+window/handheld/orientation=4
 
 [rendering]
 
 renderer/rendering_method="forward_plus"
+; Android (all mobile): GLES3 Compatibility renderer. Widest device + emulator
+; support (no Vulkan dependency); desktop keeps Forward Plus. Packaging-only
+; override, no gameplay code change.
+renderer/rendering_method.mobile="gl_compatibility"
+; Required for Android export: importer writes ETC2/ASTC variants used by the
+; mobile build. Packaging-only; desktop imports unchanged.
+textures/vram_compression/import_etc2_astc=true
