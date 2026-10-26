@@ -28,4 +28,11 @@ PASS: over-demand depletes table -> warning text
 PASS: warning banner text set
 PASS: warning cites no-game-over rule
 PASS: Next still works while warned (no game over)
+PASS: second sim sets up
+PASS: negative money raises banner
+PASS: third sim sets up
+PASS: negative manhours raise banner
+PASS: yield sim sets up
+PASS: no yield before month 12
+PASS: mesquite yields $12 from month 12
 HUD sim test: all checks passed.

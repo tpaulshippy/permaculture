@@ -7,21 +7,23 @@ extends RefCounted
 ## money_usd / manhour bank / water reserve across Next presses.
 ##
 ## Monthly math (documented, deterministic, Q11 no-RNG):
-## - upkeep_usd = 80/house + 15/well_L1 (tuning upkeep_usd_per_mo)
+## - upkeep_usd = per-item upkeep_usd_per_mo summed over placements
+##   (80/house, 15/well_L1, 0 elsewhere per current tuning)
 ## - upkeep_mh  = 8/house + 4/well + 2/ditch + 1/mesquite
 ## - provided_mh = 160/house; mh_bank += provided - upkeep
-## - mature mesquite (age >= yield_start_month 12) pays yield_usd_per_mo 12
+## - mature mesquite (age in months >= yield_start_month 12, counting the
+##   planting month) pays yield_usd_per_mo 12
 ## - rain_gal_ref = month_mm * (1000 / avg_monthly_mm): scales the tuning
 ##   1000 gal/mo reference plot-rainfall by actual biome rainfall
-## - capture_pct = min(0.05 + 0.12 * ditch_count, 0.60) (tuning base 5%,
-##   +12 %/ditch, 60 % cap); rain_capture = rain_gal_ref * capture_pct
-## - pump = 2500/well (tuning pump_gal_per_mo); demand = 250/mesquite
-##   (tuning water_need_gal_per_mo); reserve clamps to [0, cap]
+## - capture recharges the table: min(base 5% + 12 %/ditch, 60 %) * rain_gal
+## - pump capacity = 2500/well (tuning pump_gal_per_mo). The well draws from
+##   the table, so it can only deliver what the table holds and never raises
+##   it: delivered = min(capacity, demand, table + capture). Unmet demand is
+##   an irrigation shortfall (advisory warning, Q14).
 ##
-## Warnings (Q14): money < 0 or water reserve at 0 with unmet demand (or
-## mh_bank < 0) raise a red banner. They NEVER block: no game over, Next
-## keeps working. Wind is display-only (Q12): deterministic from
-## month_index, zero sim effect.
+## Warnings (Q14): money < 0, mh_bank < 0, irrigation shortfall > 0, or water
+## table at 0. Advisory only: they NEVER block, no game over, Next works.
+## Wind is display-only (Q12): deterministic from month_index, zero effect.
 
 const TUNING_PATH := "res://data/tuning.json"
 const RAIN_PATH := "res://data/sonoran_rainfall.json"
@@ -45,12 +47,15 @@ var _ref_rain := 1000.0
 var month_index := 0
 var money := 0.0
 var mh_bank := 0.0
+## Usable groundwater stock. Wells draw from it (never add to it); ditch
+## capture recharges it. Displayed as the water-table bar.
 var water_gal := START_WATER_GAL
 var houses := 0
 var wells := 0
 var ditches := 0
 var mesquite := 0
 var _planted_at: Array[int] = []
+var _last_unmet := 0.0
 
 
 func is_ready() -> bool:
@@ -118,6 +123,7 @@ func reset() -> void:
 	ditches = 0
 	mesquite = 0
 	_planted_at.clear()
+	_last_unmet = 0.0
 
 
 func start_money() -> float:
@@ -172,26 +178,30 @@ func charge_place(item_id: String) -> Dictionary:
 	return {"ok": true, "reason": ""}
 
 
-## Advance one month. Applies upkeep, labor, yield, pump/rain/demand, then
-## month_index += 1. Returns a summary dict for the HUD status line.
+## Advance one month. Applies upkeep, labor, yield, and the water-table
+## balance for the CURRENT month, then month_index += 1. The returned
+## "month"/"rain_mm" describe the month just processed (not the new one).
 func advance_month() -> Dictionary:
 	if not _ready:
 		return {"ok": false, "reason": "sim not ready"}
+	var done_name := month_name()
+	var mm := rain_mm(month_index % 12)
+	var counts := {"house": houses, "well_l1": wells,
+		"ditch_berm": ditches, "mesquite": mesquite}
 	var upkeep_usd := 0.0
+	for id in counts.keys():
+		if _items.has(id):
+			upkeep_usd += _num(_items[id], "upkeep_usd_per_mo") * counts[id]
 	var upkeep_mh := 0.0
 	var provided_mh := 0.0
 	if _items.has("house"):
 		var h: Dictionary = _items["house"]
-		upkeep_usd += _num(h, "upkeep_usd_per_mo") * houses
 		upkeep_mh += _num(h, "upkeep_manhours_per_mo") * houses
 		provided_mh += _num(h, "provides_manhours_per_mo") * houses
 	if _items.has("well_l1"):
-		var w: Dictionary = _items["well_l1"]
-		upkeep_usd += _num(w, "upkeep_usd_per_mo") * wells
-		upkeep_mh += _num(w, "upkeep_manhours_per_mo") * wells
+		upkeep_mh += _num(_items["well_l1"], "upkeep_manhours_per_mo") * wells
 	if _items.has("ditch_berm"):
-		var d: Dictionary = _items["ditch_berm"]
-		upkeep_mh += _num(d, "upkeep_manhours_per_mo") * ditches
+		upkeep_mh += _num(_items["ditch_berm"], "upkeep_manhours_per_mo") * ditches
 	var yield_usd := 0.0
 	if _items.has("mesquite"):
 		var p: Dictionary = _items["mesquite"]
@@ -199,36 +209,38 @@ func advance_month() -> Dictionary:
 		var ystart := int(_num(p, "yield_start_month") if p.has("yield_start_month") else 12.0)
 		var mature := 0
 		for planted in _planted_at:
-			if month_index - planted >= ystart:
+			if month_index - planted + 1 >= ystart:
 				mature += 1
 		yield_usd = _num(p, "yield_usd_per_mo") * mature
-	var mm := rain_mm(month_index % 12)
 	var rain_gal := mm * (_ref_rain / _avg_mm) if _avg_mm > 0.0 else 0.0
 	var ditch_pct := 0.0
 	if _items.has("ditch_berm"):
 		ditch_pct = _num(_items["ditch_berm"], "retention_percent") / 100.0
 	var capture := minf(_base_capture + ditch_pct * ditches, 0.60) * rain_gal
-	var pump := 0.0
+	var pump_cap := 0.0
 	var demand := 0.0
 	if _items.has("well_l1"):
-		pump = _num(_items["well_l1"], "pump_gal_per_mo") * wells
+		pump_cap = _num(_items["well_l1"], "pump_gal_per_mo") * wells
 	if _items.has("mesquite"):
 		demand = _num(_items["mesquite"], "water_need_gal_per_mo") * mesquite
+	# Wells draw from the table: delivery is capped by demand and by what
+	# the table holds (plus this month's recharge), so wells never raise it.
+	var delivered := minf(pump_cap, minf(demand, water_gal + capture))
 	money += yield_usd - upkeep_usd
 	mh_bank += provided_mh - upkeep_mh
-	var unmet := demand - (water_gal + pump + capture)
-	water_gal = clampf(water_gal + pump + capture - demand, 0.0, WATER_CAP_GAL)
+	water_gal = clampf(water_gal + capture - delivered, 0.0, WATER_CAP_GAL)
+	_last_unmet = maxf(demand - delivered, 0.0)
 	month_index += 1
 	return {
 		"ok": true,
-		"month": month_name(),
-		"rain_mm": rain_mm(),
+		"month": done_name,
+		"rain_mm": mm,
 		"upkeep_usd": upkeep_usd,
 		"yield_usd": yield_usd,
-		"pump_gal": pump,
+		"pump_gal": delivered,
 		"capture_gal": capture,
 		"demand_gal": demand,
-		"unmet_gal": maxf(unmet, 0.0),
+		"unmet_gal": _last_unmet,
 		"warning": warning_text(),
 	}
 
@@ -242,6 +254,8 @@ func warning_text() -> String:
 		parts.append("Money negative ($%.0f)" % money)
 	if mh_bank < 0.0:
 		parts.append("Manhours negative (%.0f mh)" % mh_bank)
+	if _last_unmet > 0.0:
+		parts.append("Irrigation shortfall %.0f gal" % _last_unmet)
 	if water_gal <= 0.0:
 		parts.append("Water table depleted")
 	if parts.is_empty():

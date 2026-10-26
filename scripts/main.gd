@@ -148,6 +148,7 @@ func _build(mode: int) -> void:
 		push_error("Hex overlay setup failed.")
 	_sim = SimScript.new()
 	if not _sim.setup():
+		_demo_failed = true
 		push_error("Turn sim setup failed (tuning/rainfall packs).")
 	var mesh: ArrayMesh = MeshScript.build_array_mesh(_water, mode)
 	var framing := _framing()
@@ -450,7 +451,9 @@ func _build_hud() -> void:
 	_water_bar = _make_bar(box, 100.0)
 	_mh_label = Label.new()
 	box.add_child(_mh_label)
-	_mh_bar = _make_bar(box, 200.0)
+	# Fixed capacity: ~2.5 months of one house's 160 mh/mo output. Values
+	# above clamp; the label always shows the true bank.
+	_mh_bar = _make_bar(box, 400.0)
 	_warn_label = Label.new()
 	_warn_label.add_theme_color_override("font_color", Color(1.0, 0.15, 0.1))
 	_warn_label.visible = false
@@ -499,7 +502,7 @@ func _on_next() -> void:
 				float(report.get("upkeep_usd", 0.0)), float(report.get("pump_gal", 0.0)),
 				float(report.get("demand_gal", 0.0))])
 		else:
-			_refresh_hud("Advancing a month (month sim owned by other issues).")
+			_refresh_hud("Month sim not ready (tuning/rainfall packs missing?).")
 	else:
 		_refresh_hud("Next is locked: " + _hex.gate_label())
 
@@ -530,7 +533,7 @@ func _refresh_resources() -> void:
 	_money_label.text = "Money $%.0f" % _sim.money
 	_water_bar.value = _sim.water_pct()
 	_water_label.text = "Water table %.0f%% (%.0f gal)" % [_sim.water_pct(), _sim.water_gal]
-	_mh_bar.max_value = maxf(200.0, _sim.mh_bank)
+	_mh_bar.max_value = 400.0
 	_mh_bar.value = clampf(_sim.mh_bank, 0.0, _mh_bar.max_value)
 	_mh_label.text = "Manhours %.0f mh" % _sim.mh_bank
 	var warn := String(_sim.warning_text())

@@ -85,6 +85,32 @@ func _init() -> void:
 	var still_ok: Dictionary = sim.advance_month()
 	_check(bool(still_ok.get("ok")), "Next still works while warned (no game over)")
 
+	# Every warning branch is covered, not just water: negative money and
+	# negative manhours each raise the banner on their own.
+	var s_money = SimScript.new()
+	_check(s_money.setup(), "second sim sets up")
+	s_money.money = -5.0
+	_check(String(s_money.warning_text()).contains("Money negative"),
+		"negative money raises banner")
+	var s_mh = SimScript.new()
+	_check(s_mh.setup(), "third sim sets up")
+	s_mh.mh_bank = -1.0
+	_check(String(s_mh.warning_text()).contains("Manhours negative"),
+		"negative manhours raise banner")
+
+	# Yield starts with month 12 (tuning yield_start_month), counting the
+	# planting month: 11 advances pay nothing, the 12th pays $12/tree.
+	var s_yield = SimScript.new()
+	_check(s_yield.setup(), "yield sim sets up")
+	s_yield.charge_place("mesquite")
+	for i in range(11):
+		s_yield.advance_month()
+	_check(is_equal_approx(s_yield.money, 9960.0),
+		"no yield before month 12")
+	s_yield.advance_month()
+	_check(is_equal_approx(s_yield.money, 9972.0),
+		"mesquite yields $12 from month 12")
+
 	if _failures == 0:
 		print("HUD sim test: all checks passed.")
 	else:

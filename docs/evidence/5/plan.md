@@ -1,13 +1,16 @@
 # Issue #5 — HUD (tight scope)
 
-Goal: HUD-only on top of existing main.gd + hex_grid.gd (no rewrites).
+Goal: HUD + resource sim wired into placement and Next, on top of existing
+main.gd + hex_grid.gd (no rewrites of terrain/hex logic).
 
 ## What ships
-- `scripts/turn_sim.gd` (new, pure logic): resources sim reading `data/tuning.json`
-  costs/upkeep read-only + `data/sonoran_rainfall.json` monthly mm. Tracks
-  money / manhours bank / water reserve, month_index, per-plant age. Deterministic.
-- `main.gd` minimal hooks: build bars + rainfall/wind/month labels + red warning
-  banner; placement deducts build costs; Next advances month + updates bars.
+- `scripts/turn_sim.gd` (new, pure logic): monthly resource sim reading
+  `data/tuning.json` costs/upkeep read-only + `data/sonoran_rainfall.json`
+  monthly mm. Tracks money / manhours bank / water-table stock, month_index,
+  per-plant age. Deterministic. Wells draw from the table (never raise it);
+  ditch capture recharges it; unmet irrigation is a shortfall warning.
+- `main.gd` hooks (~150 lines): placement deducts build costs through the
+  sim; Next advances the month and refreshes bars/labels/banner.
   Q13 gate (`hex.can_advance()`) still owns Next enable; Q14 warning never blocks.
 - Wind display-only (deterministic from month_index, no sim effect) per Q12.
 - `tests/test_hud.gd` headless checks.

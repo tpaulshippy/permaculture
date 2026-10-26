@@ -5,10 +5,10 @@ All artifacts are from actual Godot 4.7.2 runs, not mockups.
 - `demo.mp4` — real in-engine video (1280x720, 24 fps, ~26 s): orbit while
   house / well L1 / ditch-berm / mesquite are placed via the click raycast
   (Q13 gate goes LOCKED -> UNLOCKED), Next advances Month 1 -> 2 (bars
-  update: money $2965, water 8411 gal, 107 mh), 24 extra mesquite are planted,
-  then 3x Next outruns supply and trips the red water-table warning
-  (Q14: banner shows, Next stays enabled, no game over). Assembled with
-  ffmpeg from 627 viewport frames dumped by the running game (see Reproduce).
+  update: money $2965, water table 59 % (5911 gal), 107 mh), 24 extra mesquite are
+  planted, then 3x Next outruns the well and trips the red irrigation/water
+  warnings (Q14: banner shows, Next stays enabled, no game over). Assembled
+  with ffmpeg from 626 viewport frames dumped by the running game (see Reproduce).
 - `demo_console.log` — stdout of that demo run (placements + Next summaries).
 - `demo_frame_locked.png` — Month 1: house placed, Next LOCKED + disabled,
   bars live, Jan rainfall 21.3 mm, wind display-only, no warning.
@@ -21,8 +21,9 @@ All artifacts are from actual Godot 4.7.2 runs, not mockups.
 Short honest beat in the footage: placing the well before the first Next
 drives manhours briefly negative (40 mh grant covers exactly the house, per
 tuning sim_baseline), so the red banner flashes once mid-demo until the
-first Next pays the 160 mh house labor. Banner-then-clear plus the final
-water warning both demonstrate the Q14 advisory path.
+first Next adds the house's 160 mh/mo output minus upkeep, taking mh from
+about -38 to 107. Banner-then-clear plus the final water warnings both
+demonstrate the Q14 advisory path.
 
 ## Reproduce
 
@@ -48,4 +49,8 @@ Capture machine: Apple M1 Pro, Metal 4.0, Forward+, 1280x720.
 
 Costs/upkeep read from `data/tuning.json` at runtime (numbers untouched);
 rainfall from `data/sonoran_rainfall.json`; wind is a deterministic function
-of `month_index` with zero sim effect (Q12). Warnings never block (Q14).
+of `month_index` with zero sim effect (Q12). The water-table bar is the
+groundwater stock: ditch capture recharges it, wells draw from it (delivery
+is capped by demand and by what the table holds, so wells never raise it),
+and demand above delivery is an irrigation shortfall. Warnings (negative
+money/mh, shortfall, depleted table) never block (Q14).
