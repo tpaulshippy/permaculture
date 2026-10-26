@@ -1,0 +1,66 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+=== Hex overlay headless test (issue #3) ===
+PASS: setup binds to 20x20 terrain water model
+PASS: grid reports ready after setup
+PASS: overlay is 20x20 (400 hexes)
+ERROR: HexGrid.setup: terrain water model is null or ungenerated.
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] setup (res://scripts/hex_grid.gd:94)
+       [1] _init (res://tests/test_hex.gd:45)
+PASS: setup rejects ungenerated water model
+PASS: rejected setup stays not-ready
+PASS: not-ready grid rejects placements
+ERROR: HexGrid.setup: water grid 8x8 does not match overlay 20x20.
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] setup (res://scripts/hex_grid.gd:97)
+       [1] _init (res://tests/test_hex.gd:52)
+PASS: setup rejects mismatched grid size
+PASS: avg-height sampling matches independent 3x3 mean on all 400 hexes
+PASS: hex moisture matches TerrainWater on all 400 hexes
+PASS: out-of-bounds moisture is 0.0
+PASS: out-of-bounds height is 0.0
+PASS: fixed seed gives deterministic hex sampling
+PASS: native hints are deterministic
+PASS: 3-5 native hints pre-placed
+PASS: hints are spaced apart
+PASS: hints sit on above-average moisture (wash-side natives)
+PASS: hints are ghosts: they do not count as plants
+PASS: hints alone do not unlock Next
+PASS: hex_to_world / world_to_hex round-trips on all 400 hexes
+PASS: far-away world position maps out of bounds
+PASS: item 'house' is placeable somewhere
+PASS: item 'well_l1' is placeable somewhere
+PASS: item 'ditch_berm' is placeable somewhere
+PASS: item 'mesquite' is placeable somewhere
+PASS: terrain has both dry and wash-core cells
+PASS: well rejected on dry ground
+PASS: house rejected in the wash core
+PASS: house rejected on steep ground (or terrain has no steep cells)
+PASS: unknown item rejected
+PASS: out-of-bounds placement rejected
+PASS: house places on valid cell
+PASS: structure slot reads back
+PASS: second structure rejected on occupied slot
+PASS: double-place rejected
+PASS: mesquite shares a hex with a structure (independent slots)
+PASS: second plant rejected on occupied plant slot
+PASS: clear_hex empties both slots
+PASS: mesquite plants on a hint hex
+PASS: planting clears the hint ghost
+PASS: fresh grid: Next locked
+PASS: fresh gate status is all-false
+PASS: house alone: Next still locked
+PASS: gate label reports LOCKED
+PASS: house + well: Next still locked (plant missing)
+PASS: no plant yet
+PASS: ditch does not substitute for the required plant
+PASS: found a distinct mesquite cell
+PASS: house + well + plant: Next UNLOCKED
+PASS: gate label reports UNLOCKED
+gate: Q13 [house OK, well OK, plant OK] -> Next UNLOCKED
+PASS: snapshot holds exactly the 4 placed hexes
+PASS: snapshot entries carry save-schema fields
+ALL TESTS PASSED
