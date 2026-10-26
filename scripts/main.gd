@@ -549,7 +549,9 @@ func _demo_place(item_id: String) -> void:
 			used[Vector2i(int(parts[parts.size() - 2]), int(parts[parts.size() - 1]))] = true
 	var hex := _nearest_placeable(item_id, used)
 	if hex == Vector2i(-1, -1):
-		_refresh_hud("Demo: no valid cell for '%s'." % item_id)
+		_demo_failed = true
+		push_error("Demo: no valid cell for '%s'." % item_id)
+		_refresh_hud("Demo FAILED: no valid cell for '%s'." % item_id)
 		return
 	# Exercise the real click path: project the target hex to screen and
 	# place through the raycast validator. A visible target that the raycast
