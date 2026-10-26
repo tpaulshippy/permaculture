@@ -100,6 +100,10 @@ func apply_rain(p_rain: float) -> void:
 		push_warning("TerrainWater.apply_rain: negative rain %.3f clamped to 0." % p_rain)
 		p_rain = 0.0
 	rain_amount = p_rain
+	if heights.size() != cell_count():
+		push_error("TerrainWater.apply_rain: heightfield not generated.")
+		sink_count = cell_count()
+		return
 	compute_d8()
 	compute_accumulation()
 	compute_moisture()

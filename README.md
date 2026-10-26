@@ -11,7 +11,7 @@ per-hex moisture API (`TerrainWater.get_moisture_at()`).
 - `scripts/terrain_water.gd` — deterministic heightfield + D8 + moisture (no UI dependency)
 - `scripts/terrain_mesh.gd` — ArrayMesh builder, TERRAIN / MOISTURE render modes
 - `scripts/future_stubs.gd` — stubs for hex overlay gameplay, store, HUD, save, export presets (owned by other issues)
-- `tests/test_terrain.gd` — headless test, 32 checks, exit code 0 on pass (1 on failure)
+- `tests/test_terrain.gd` — headless test, 34 checks, exit code 0 on pass (1 on failure)
 
 ```sh
 godot --headless --path . --script res://tests/test_terrain.gd

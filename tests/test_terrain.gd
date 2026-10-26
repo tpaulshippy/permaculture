@@ -154,6 +154,16 @@ func _init() -> void:
 		dry_max = maxf(dry_max, v)
 	_check(dry_max == 0.0, "clamped rain yields zero moisture everywhere")
 
+	# Rain on an ungenerated instance fails safe: no flow, every cell a sink.
+	var raw = WaterScript.new(4, 4)
+	raw.apply_rain(1.0)
+	_check(raw.sink_count == raw.cell_count(),
+		"ungenerated apply_rain marks every cell a sink")
+	_check(raw.get_height_at(Vector2i(1, 1)) == 0.0
+		and raw.get_moisture_at(Vector2i(1, 1)) == 0.0
+		and raw.get_flow_to(Vector2i(1, 1)) == Vector2i(-1, -1),
+		"ungenerated getters return safe defaults")
+
 	# D8 follows steepest descent, not merely the lowest neighbor: an
 	# orthogonal drop of 0.2 (slope 0.2) must beat a diagonal drop of 0.25
 	# (slope 0.25 / sqrt(2) ~= 0.177).
