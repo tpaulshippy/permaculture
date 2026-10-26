@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "seed": 20260704,
+  "biome_id": "sonoran",
+  "month_index": 14,
+  "resources": {
+    "money": 320.5,
+    "water_table": 68.0,
+    "manhours": 12.0
+  },
+  "hexes": [
+    { "q": 0, "r": 0, "structure_id": "house", "plant_id": null, "growth_stage": null, "condition": null },
+    { "q": 1, "r": 0, "structure_id": "well_1", "plant_id": null, "growth_stage": null, "condition": null },
+    { "q": 0, "r": 1, "structure_id": null, "plant_id": "mesquite", "growth_stage": 3, "condition": "healthy" },
+    { "q": -1, "r": 1, "structure_id": null, "plant_id": "prickly_pear", "growth_stage": 2, "condition": "healthy" },
+    { "q": 1, "r": -1, "structure_id": null, "plant_id": "agave", "growth_stage": 1, "condition": "stressed" },
+    { "q": 2, "r": -1, "structure_id": "ditch", "plant_id": null, "growth_stage": null, "condition": null },
+    { "q": -1, "r": 0, "structure_id": null, "plant_id": "palo_verde", "growth_stage": 4, "condition": "healthy" },
+    { "q": 0, "r": -1, "structure_id": null, "plant_id": "ocotillo", "growth_stage": 0, "condition": "healthy" },
+    { "q": 2, "r": 0, "structure_id": null, "plant_id": "saguaro", "growth_stage": 5, "condition": "healthy" },
+    { "q": -2, "r": 1, "structure_id": null, "plant_id": "creosote", "growth_stage": 2, "condition": "dead" }
+  ],
+  "saved_at": "2026-10-25T00:00:00Z"
+}

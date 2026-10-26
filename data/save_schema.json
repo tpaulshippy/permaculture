@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/tpaulshippy/permaculture/main/data/save_schema.json",
+  "title": "Permaculture single-slot autosave (v1)",
+  "description": "Single local JSON slot. One file contains seed + hex states + month + resources. Autosaved on Next, loaded on boot. Corrupt/missing/version-mismatch file MUST NOT crash: loader discards it and starts a fresh seed (see docs/save_spec.md). Spec-only for issue #7; no Godot save/load implementation in this PR.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "seed", "biome_id", "month_index", "resources", "hexes"],
+  "properties": {
+    "version": {
+      "description": "Schema version. Integer. v1 only accepts 1. Loader rejects unknown versions and falls back to fresh seed.",
+      "type": "integer",
+      "const": 1
+    },
+    "seed": {
+      "description": "World-gen seed. Regenerates terrain/heightmap deterministically. Non-negative integer capped at 2^53-1 (9007199254740991) so double-based JSON parsers cannot lose precision and silently change terrain.",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "biome_id": {
+      "description": "Biome identifier (e.g. sonoran). Free-form string so content packs (issue #6) can add biomes without a schema change.",
+      "type": "string",
+      "minLength": 1
+    },
+    "month_index": {
+      "description": "Total months elapsed since garden creation (turn counter, 0-based). Calendar month = month_index % 12. Autosave increments on every Next press.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "resources": {
+      "description": "Player resources snapshot for this turn.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["money", "water_table", "manhours"],
+      "properties": {
+        "money": {
+          "description": "Current finances. Game over if < 0 at month resolution; saves clamp to >= 0.",
+          "type": "number",
+          "minimum": 0
+        },
+        "water_table": {
+          "description": "Water table level as percent 0..100. Game over if 0 with unmet irrigation demand.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "manhours": {
+          "description": "Manhours remaining/banked at save time (unspent hours do not carry full value; see tuning).",
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "hexes": {
+      "description": "Sparse per-hex state overrides. Only hexes with player-placed or mutated state need entries; empty terrain is regenerated from seed. Axial coords (q, r). No duplicate (q, r) pairs: JSON Schema cannot express key-based uniqueness, so loaders MUST reject duplicate coordinates (the reference manual validator in tools/validate_save.py enforces this).",
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["q", "r"],
+        "properties": {
+          "q": { "type": "integer" },
+          "r": { "type": "integer" },
+          "structure_id": {
+            "description": "Structure id from store data (issue #4), or null when none. Examples: house, well, pond, ditch.",
+            "type": ["string", "null"],
+            "minLength": 1
+          },
+          "plant_id": {
+            "description": "Plant id from content pack (issue #6), or null when none.",
+            "type": ["string", "null"],
+            "minLength": 1
+          },
+          "growth_stage": {
+            "description": "0 = seedling/just placed .. 5 = mature. Null/omitted = not applicable. Meaningless without a plant_id; loaders ignore it when plant_id is null/absent.",
+            "type": ["integer", "null"],
+            "minimum": 0,
+            "maximum": 5
+          },
+          "condition": {
+            "description": "Health flag. Omitted or explicit null both mean healthy (default). Meaningless without a plant_id; loaders ignore it when plant_id is null/absent.",
+            "type": ["string", "null"],
+            "enum": ["healthy", "stressed", "dead", null]
+          }
+        }
+      }
+    },
+    "saved_at": {
+      "description": "Optional ISO-8601 timestamp of when the autosave was written. Informational only; never trusted for logic.",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[+-]\\d{2}:\\d{2})$"
+    }
+  }
+}
