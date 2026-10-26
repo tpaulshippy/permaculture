@@ -1,0 +1,20 @@
+.gitignore
+  h_6bbd00fe0a456a 9-12
+docs/android.md
+  h_6bbd00fe0a456a 37-52
+project.godot
+  h_6bbd00fe0a456a 18-19,25-27,29-31
+tools/validate_android_preset.py
+  h_6bbd00fe0a456a 168-173,178-179
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6ff05f2b1b12d2c1c01aeef25802038431e7811b",
+  "prompts": {},
+  "humans": {
+    "h_6bbd00fe0a456a": {
+      "author": "Paul Shippy <pshippy@gmail.com>"
+    }
+  }
+}
