@@ -8,6 +8,7 @@
   "mature_height_m": 9,
   "mature_canopy_m": 9,
   "growth_cm_per_year": 60,
+  "growth_cm_per_year_note": "Representative fast-growth rate used for game balance, not a site-specific measurement; actual growth varies with water, soils, and competition.",
   "taproot_m": 15,
   "taproot_note": "Depth varies with water table; mature trees reach 15 m or more once established.",
   "drought_tolerant": true,
@@ -35,14 +36,16 @@
     "extensions": {
       "establishment_months": 18,
       "establishment_water_multiplier": 3.0,
+      "establishment_yield_rule": "Yield starts at month 12 per tuning while establishment watering runs through month 18; months 12-18 yield normally but still pay establishment water cost.",
       "soil_health_bonus_pct_per_year": 5,
       "wind_erosion_reduction_pct": 15,
       "shade_water_saving_pct_nearby": 10,
       "survival": {
         "optimal_plant_months": ["Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar"],
-        "plant_in_foresummer_penalty": "Apr-Jun planting: survival x0.6 unless irrigated at establishment rate",
+        "plant_in_foresummer_penalty": "Apr-Jun planting: survival x0.6 unless irrigated at establishment rate (x1.0, see foresummer_survival_multiplier_irrigated)",
         "foresummer_penalty_months": ["Apr", "May", "Jun"],
         "foresummer_survival_multiplier": 0.6,
+        "foresummer_survival_multiplier_irrigated": 1.0,
         "drought_tolerance": "high once established; seedlings need monsoon/winter rains or irrigation",
         "month_rule": "Every month is defined: Jul-Mar plant at standard/optimal survival (winter rains Dec-Mar bank soil moisture); Apr-Jun plant at x0.6 survival unless irrigated at establishment rate."
       }

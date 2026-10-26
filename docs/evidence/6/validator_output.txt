@@ -18,8 +18,11 @@ PASS: mesquite yield matches tuning ($12/mo from month 12)
 PASS: mesquite stats namespaced under game_stats_proposed, separate from tuning schema
 PASS: mesquite cites >=2 sources
 PASS: seasons partition all 12 months exactly once
-PASS: every month has a defined survival effect (optimal except Apr-Jun penalty)
-PASS: foresummer penalty is a numeric 0.6 multiplier on Apr-Jun
+PASS: penalty months equal the foresummer drought season and cover exactly the non-optimal months
+PASS: optimal months are all known month labels
+PASS: survival multipliers numeric (0.6 unirrigated, 1.0 at establishment rate)
+PASS: yield-during-establishment rule is defined (yield mo 12 vs watering thru mo 18)
+PASS: growth rate is marked as a game-balance representative value
 PASS: taproot_m is a numeric metric (qualifier in taproot_note)
 PASS: info text covers 'best time to plant'
 PASS: info text covers 'problems'
@@ -27,6 +30,6 @@ PASS: info text covers 'strategies'
 PASS: info text covers 'monsoon'
 PASS: info text covers 'caliche'
 PASS: evidence chart PNG exists and non-trivial
-PASS: evidence chart is newer than the rainfall data (regenerate after data changes)
+PASS: evidence chart fingerprint matches current rainfall data (regen plot after data changes)
 
 ALL CHECKS PASSED

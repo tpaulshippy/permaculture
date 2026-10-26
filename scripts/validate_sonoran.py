@@ -1,4 +1,5 @@
 """Validate Sonoran content pack (issue #6). Pure stdlib. Exit 0 = pass."""
+import hashlib
 import json, sys
 from pathlib import Path
 
@@ -39,8 +40,12 @@ check(len(m.get("sources", [])) >= 2, "mesquite cites >=2 sources")
 seasons = r.get("seasons", {})
 check(sorted(sum([seasons.get(k, []) for k in ("winter_rains", "foresummer_drought", "monsoon", "autumn")], [])) == sorted(r.get("months", [])), "seasons partition all 12 months exactly once")
 surv = g.get("extensions", {}).get("survival", {})
-check(set(r.get("months", [])) - set(surv.get("optimal_plant_months", [])) == {"Apr", "May", "Jun"} and "plant_in_foresummer_penalty" in surv, "every month has a defined survival effect (optimal except Apr-Jun penalty)")
-check(surv.get("foresummer_survival_multiplier") == 0.6 and set(surv.get("foresummer_penalty_months", [])) == {"Apr", "May", "Jun"}, "foresummer penalty is a numeric 0.6 multiplier on Apr-Jun")
+penalty = set(surv.get("foresummer_penalty_months", []))
+check(set(seasons.get("foresummer_drought", [])) == penalty and set(r.get("months", [])) - set(surv.get("optimal_plant_months", [])) == penalty, "penalty months equal the foresummer drought season and cover exactly the non-optimal months")
+check(set(surv.get("optimal_plant_months", [])) <= set(r.get("months", [])), "optimal months are all known month labels")
+check(surv.get("foresummer_survival_multiplier") == 0.6 and surv.get("foresummer_survival_multiplier_irrigated") == 1.0, "survival multipliers numeric (0.6 unirrigated, 1.0 at establishment rate)")
+check("establishment_yield_rule" in g.get("extensions", {}), "yield-during-establishment rule is defined (yield mo 12 vs watering thru mo 18)")
+check("growth_cm_per_year_note" in m, "growth rate is marked as a game-balance representative value")
 check(isinstance(m.get("taproot_m"), (int, float)), "taproot_m is a numeric metric (qualifier in taproot_note)")
 
 info = (ROOT / "docs/sonoran_info.md").read_text().lower()
@@ -49,7 +54,11 @@ for kw in ["best time to plant", "problems", "strategies", "monsoon", "caliche"]
 
 chart = ROOT / "docs/evidence/6/rainfall_chart.png"
 check(chart.exists() and chart.stat().st_size > 5000, "evidence chart PNG exists and non-trivial")
-check(chart.exists() and chart.stat().st_mtime >= (ROOT / "data/sonoran_rainfall.json").stat().st_mtime, "evidence chart is newer than the rainfall data (regenerate after data changes)")
+fingerprint = hashlib.sha256(json.dumps({"months": r["months"], "rainfall_mm": r["rainfall_mm"], "seasons": seasons,
+                                          "annual_mm": r["annual_mm"], "station": r["station"]},
+                                         sort_keys=True).encode()).hexdigest()
+sidecar = ROOT / "docs/evidence/6/rainfall_chart.sha256"
+check(sidecar.exists() and sidecar.read_text().strip() == fingerprint, "evidence chart fingerprint matches current rainfall data (regen plot after data changes)")
 
 print(f"\n{'ALL CHECKS PASSED' if not fails else f'{len(fails)} FAILURES'}")
 sys.exit(1 if fails else 0)

@@ -64,8 +64,10 @@ heat-lovers, fall/winter for cool-season annuals and perennials.
   deep-infrequent watering to drive taproots down, then taper off.
 - **Monsoon-proof structures:** Armor spillways with rock, keep berms low and
   broad, clean silt after big storms.
-- **Go native first:** Non-natives need far more supplemental water; natives survive the
-  foresummer on rainfall + stored soil water once established.
+- **Go native first:** Non-natives need far more supplemental water; established
+  drought-adapted natives such as mesquite survive the foresummer on rainfall +
+  stored soil water once established — taper irrigation by species and site,
+  since less drought-adapted natives still need supplemental water.
 
 ## Velvet mesquite in one line
 

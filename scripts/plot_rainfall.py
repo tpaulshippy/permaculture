@@ -2,6 +2,7 @@
 
 Requires matplotlib: pip install matplotlib
 """
+import hashlib
 import json
 from pathlib import Path
 import matplotlib
@@ -11,11 +12,13 @@ import matplotlib.pyplot as plt
 ROOT = Path(__file__).resolve().parent.parent
 data = json.loads((ROOT / "data/sonoran_rainfall.json").read_text())
 months, vals = data["months"], data["rainfall_mm"]
-assert len(months) == 12 == len(vals), "need 12 months of data"
+if len(months) != 12 or len(vals) != 12:
+    raise ValueError("need 12 months of data")
 seasons = data["seasons"]
 WINTER = {months.index(m) for m in seasons["winter_rains"]}
 MONSOON = {months.index(m) for m in seasons["monsoon"]}
-assert WINTER.isdisjoint(MONSOON), "winter and monsoon months must not overlap"
+if not WINTER.isdisjoint(MONSOON):
+    raise ValueError("winter and monsoon months must not overlap")
 colors = ["#2e86ab" if i in MONSOON else "#7fb069" if i in WINTER else "#b0a898" for i in range(12)]
 fig, ax = plt.subplots(figsize=(9, 5))
 bars = ax.bar(months, vals, color=colors, edgecolor="black")
@@ -29,4 +32,8 @@ fig.tight_layout()
 out = ROOT / "docs/evidence/6/rainfall_chart.png"
 out.parent.mkdir(parents=True, exist_ok=True)
 fig.savefig(out, dpi=120)
+fingerprint = hashlib.sha256(json.dumps({"months": months, "rainfall_mm": vals, "seasons": seasons,
+                                          "annual_mm": data["annual_mm"], "station": data["station"]},
+                                         sort_keys=True).encode()).hexdigest()
+(out.parent / "rainfall_chart.sha256").write_text(fingerprint + "\n")
 print(f"wrote {out} ({out.stat().st_size} bytes) from data/sonoran_rainfall.json")
