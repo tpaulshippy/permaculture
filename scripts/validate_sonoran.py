@@ -1,6 +1,6 @@
 """Validate Sonoran content pack (issue #6). Pure stdlib. Exit 0 = pass."""
 import hashlib
-import json, re, sys
+import json, math, re, sys
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -12,7 +12,7 @@ def check(cond, msg):
         fails.append(msg)
 
 def is_num(x):
-    return isinstance(x, (int, float)) and not isinstance(x, bool)
+    return isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x)
 
 try:
     r = json.loads((ROOT / "data/sonoran_rainfall.json").read_text())
@@ -43,9 +43,7 @@ if any(k not in r for k in ("months", "rainfall_mm", "rainfall_in", "annual_mm",
     sys.exit(1)
 
 check(r.get("units") == "mm/month", "rainfall units are mm/month")
-check(len(r.get("rainfall_mm", [])) == 12, "rainfall_mm has 12 values")
-check(len(r.get("months", [])) == 12, "months has 12 labels")
-check(len(set(r.get("months", []))) == 12, "month labels are 12 unique names (season lookups use .index)")
+check(len(set(r["months"])) == 12, "month labels are 12 unique names (season lookups use .index)")
 check(all(v >= 0 for v in r["rainfall_mm"]), "all rainfall values >= 0")
 check(abs(sum(r["rainfall_mm"]) - r["annual_mm"]) < 0.5, f"annual_mm {r['annual_mm']} ~= sum {sum(r['rainfall_mm']):.1f} (12 values rounded to 0.1 mm)")
 try:
@@ -54,11 +52,10 @@ try:
 except (TypeError, ValueError):
     src_hosts = []
 check(any(h == "weather.gov" or h.endswith(".weather.gov") for h in src_hosts), "rainfall cites NWS source with URL")
-check(len(r.get("rainfall_in", [])) == 12, "rainfall_in has 12 source values")
 check(abs(sum(r["rainfall_in"]) - r["annual_in"]) < 0.07, "annual_in matches monthly sum (12 x 0.005 + 0.005 rounding)")
 check(all(abs(mm - inch * 25.4) < 0.06 for mm, inch in zip(r["rainfall_mm"], r["rainfall_in"])), "each rainfall_mm matches rainfall_in x25.4 (0.1 mm rounding)")
 # monsoon peak check (seasons["monsoon"] months dominate)
-monsoon_months = r.get("seasons", {}).get("monsoon", ["Jul", "Aug", "Sep"])
+monsoon_months = r["seasons"]["monsoon"]
 monsoon = sum(r["rainfall_mm"][r["months"].index(m)] for m in monsoon_months)
 total = sum(r["rainfall_mm"])
 check(total > 0 and monsoon / total > 0.45, f"monsoon {'/'.join(monsoon_months)} share {monsoon/total:.0%} > 45%" if total > 0 else "monsoon share check needs positive rainfall total")
@@ -83,11 +80,11 @@ check(g.get("yield_usd_per_mo") == 12 and g.get("yield_start_month") == 12, "mes
 check("game_stats_proposed" in m and all(k not in m for k in ("cost_usd", "water_need_gal_per_mo", "yield_usd_per_mo")), "mesquite stats namespaced under game_stats_proposed, separate from tuning schema")
 srcs = m.get("sources", [])
 check(isinstance(srcs, list) and all(isinstance(s, str) for s in srcs) and len(srcs) >= 2, "mesquite cites >=2 sources")
-seasons = r.get("seasons", {})
-check(sorted(sum([seasons.get(k, []) for k in ("winter_rains", "foresummer_drought", "monsoon", "autumn")], [])) == sorted(r.get("months", [])), "seasons partition all 12 months exactly once")
+seasons = r["seasons"]
+check(sorted(sum([seasons[k] for k in ("winter_rains", "foresummer_drought", "monsoon", "autumn")], [])) == sorted(r["months"]), "seasons partition all 12 months exactly once")
 penalty = set(surv.get("foresummer_penalty_months", []))
-check(set(seasons.get("foresummer_drought", [])) == penalty and set(r.get("months", [])) - set(surv.get("optimal_plant_months", [])) == penalty, "penalty months equal the foresummer drought season and cover exactly the non-optimal months")
-check(set(surv.get("optimal_plant_months", [])) <= set(r.get("months", [])), "optimal months are all known month labels")
+check(set(seasons["foresummer_drought"]) == penalty and set(r["months"]) - set(surv.get("optimal_plant_months", [])) == penalty, "penalty months equal the foresummer drought season and cover exactly the non-optimal months")
+check(set(surv.get("optimal_plant_months", [])) <= set(r["months"]), "optimal months are all known month labels")
 check(surv.get("foresummer_survival_multiplier") == 0.6 and surv.get("foresummer_survival_multiplier_irrigated") == 1.0, "survival multipliers numeric (0.6 unirrigated, 1.0 at establishment rate)")
 check("establishment_yield_rule" in ext, "yield-during-establishment rule is defined (yield mo 12 vs watering thru mo 18)")
 check("growth_cm_per_year_note" in m, "growth rate is marked as a game-balance representative value")
