@@ -33,6 +33,10 @@ check(g.get("water_need_gal_per_mo") == 250, "mesquite water need matches tuning
 check(g.get("yield_usd_per_mo") == 12 and g.get("yield_start_month") == 12, "mesquite yield matches tuning ($12/mo from month 12)")
 check("game_stats_proposed" in m and all(k not in m for k in ("cost_usd", "water_need_gal_per_mo", "yield_usd_per_mo")), "mesquite stats namespaced under game_stats_proposed, separate from tuning schema")
 check(len(m.get("sources", [])) >= 2, "mesquite cites >=2 sources")
+seasons = r.get("seasons", {})
+check(sorted(sum([seasons.get(k, []) for k in ("winter_rains", "foresummer_drought", "monsoon", "autumn")], [])) == sorted(r.get("months", [])), "seasons partition all 12 months exactly once")
+surv = g.get("extensions", {}).get("survival", {})
+check(set(r.get("months", [])) - set(surv.get("optimal_plant_months", [])) == {"Apr", "May", "Jun"} and "plant_in_foresummer_penalty" in surv, "every month has a defined survival effect (optimal except Apr-Jun penalty)")
 
 info = (ROOT / "docs/sonoran_info.md").read_text().lower()
 for kw in ["best time to plant", "problems", "strategies", "monsoon", "caliche"]:

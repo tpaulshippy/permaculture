@@ -38,9 +38,10 @@
       "wind_erosion_reduction_pct": 15,
       "shade_water_saving_pct_nearby": 10,
       "survival": {
-        "optimal_plant_months": ["Jul", "Aug", "Sep", "Oct", "Feb", "Mar"],
+        "optimal_plant_months": ["Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar"],
         "plant_in_foresummer_penalty": "Apr-Jun planting: survival x0.6 unless irrigated at establishment rate",
-        "drought_tolerance": "high once established; seedlings need monsoon/winter rains or irrigation"
+        "drought_tolerance": "high once established; seedlings need monsoon/winter rains or irrigation",
+        "month_rule": "Every month is defined: Jul-Mar plant at standard/optimal survival (winter rains Dec-Mar bank soil moisture); Apr-Jun plant at x0.6 survival unless irrigated at establishment rate."
       }
     }
   },

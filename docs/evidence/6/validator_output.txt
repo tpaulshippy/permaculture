@@ -15,6 +15,8 @@ PASS: mesquite water need matches tuning (250 gal/mo)
 PASS: mesquite yield matches tuning ($12/mo from month 12)
 PASS: mesquite stats namespaced under game_stats_proposed, separate from tuning schema
 PASS: mesquite cites >=2 sources
+PASS: seasons partition all 12 months exactly once
+PASS: every month has a defined survival effect (optimal except Apr-Jun penalty)
 PASS: info text covers 'best time to plant'
 PASS: info text covers 'problems'
 PASS: info text covers 'strategies'
