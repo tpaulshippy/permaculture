@@ -1,0 +1,26 @@
+.gitignore
+  h_6bbd00fe0a456a 2-5,7,9,11
+docs/ios.md
+  h_6bbd00fe0a456a 1-91
+export_presets.cfg
+  h_6bbd00fe0a456a 202-327
+project.godot
+  h_6bbd00fe0a456a 25-32
+tools/gen_ios_icon.gd
+  h_6bbd00fe0a456a 1-40
+tools/gen_ios_icon.gd.uid
+  h_6bbd00fe0a456a 1
+tools/validate_android_preset.py
+  h_6bbd00fe0a456a 239-241,300
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "deb484ef03badad21270b47f0ae7e846457a113a",
+  "prompts": {},
+  "humans": {
+    "h_6bbd00fe0a456a": {
+      "author": "Paul Shippy <pshippy@gmail.com>"
+    }
+  }
+}
