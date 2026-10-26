@@ -18,6 +18,7 @@ const WaterScript := preload("res://scripts/terrain_water.gd")
 const MeshScript := preload("res://scripts/terrain_mesh.gd")
 const HexScript := preload("res://scripts/hex_grid.gd")
 const SimScript := preload("res://scripts/turn_sim.gd")
+const TutScript := preload("res://scripts/tutorial.gd")
 const Cfg := preload("res://scripts/terrain_config.gd")
 
 const CAPTURE_AFTER_FRAMES := 30
@@ -46,6 +47,20 @@ const DEMO_EVENTS := [
 ]
 const DEMO_QUIT_AFTER := 26.0
 const DEMO_ORBIT_SPEED := deg_to_rad(14.0)
+# Tutorial walkthrough recording: same machinery as DEMO_EVENTS but paced for
+# reading (placements + month advance interleaved with tutorial taps).
+# --tutorial-demo runs it; --tutorial-record=<dir> dumps the frames.
+# Video is attached to the PR only, never committed (docs stay light).
+const TUTORIAL_DEMO_EVENTS := [
+	{"t": 1.0, "tut": true},
+	{"t": 2.5, "item": "house"},
+	{"t": 6.0, "item": "well_l1"},
+	{"t": 9.5, "item": "ditch_berm"},
+	{"t": 13.0, "item": "mesquite"},
+	{"t": 16.5, "next": true},
+	{"t": 23.0, "tut": true}
+]
+const TUTORIAL_DEMO_QUIT_AFTER := 27.0
 # In-engine frame recording (evidence video when no display capturer is
 # available to this session): --demo-record=<dir> dumps viewport frames,
 # assembled afterwards with ffmpeg. Fixed demo-time spacing keeps the video
@@ -61,6 +76,9 @@ var _record_index := 0
 var _record_accum := 0.0
 var _record_failed := false
 var _demo_failed := false
+var _tut_demo := false
+var _demo_events: Array = DEMO_EVENTS
+var _demo_quit_after: float = DEMO_QUIT_AFTER
 var _frames := 0
 var _capture_failed := false
 var _offscreen: SubViewport
@@ -87,6 +105,17 @@ var _water_label: Label
 var _mh_label: Label
 var _item_buttons := {}
 
+# First-time walkthrough (scripts/tutorial.gd). Panel shows on fresh start
+# with a Skip button; gameplay requirements auto-advance it.
+var _tut_idx := 0
+var _tut_done := false
+var _tut_start_month := 0
+var _tut_panel: PanelContainer
+var _tut_title: Label
+var _tut_body: Label
+var _tut_back: Button
+var _tut_next: Button
+
 # Orbit state.
 var _yaw := 0.0
 var _pitch := 0.62
@@ -111,6 +140,17 @@ func _ready() -> void:
 		elif arg.begins_with("--demo-record="):
 			_demo = true
 			_record_dir = arg.trim_prefix("--demo-record=")
+		elif arg == "--tutorial-demo":
+			_demo = true
+			_tut_demo = true
+			_demo_events = TUTORIAL_DEMO_EVENTS
+			_demo_quit_after = TUTORIAL_DEMO_QUIT_AFTER
+		elif arg.begins_with("--tutorial-record="):
+			_demo = true
+			_tut_demo = true
+			_demo_events = TUTORIAL_DEMO_EVENTS
+			_demo_quit_after = TUTORIAL_DEMO_QUIT_AFTER
+			_record_dir = arg.trim_prefix("--tutorial-record=")
 	var mode: int = MeshScript.RenderMode.TERRAIN
 	if _capture_mode == "" or _capture_mode == "terrain":
 		mode = MeshScript.RenderMode.TERRAIN
@@ -200,6 +240,7 @@ func _build(mode: int) -> void:
 		if _capture_mode == "hex":
 			_place_capture_set()
 		_build_hud()
+		_build_tutorial()
 		_refresh_hud("Select an item (1-4) and click the terrain.")
 	if _demo:
 		_selected = "house"
@@ -486,6 +527,122 @@ func _make_bar(box: VBoxContainer, max_value: float) -> ProgressBar:
 	return bar
 
 
+## First-time walkthrough panel: plain-words steps from scripts/tutorial.gd.
+## Gameplay steps auto-advance when the player does the thing; tap-steps wait
+## for the panel button. Hidden for capture stills (no HUD there either).
+func _build_tutorial() -> void:
+	_tut_start_month = _sim.month_index if _sim != null else 0
+	var layer := CanvasLayer.new()
+	layer.layer = 10
+	add_child(layer)
+	_tut_panel = PanelContainer.new()
+	_tut_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_tut_panel.position.y -= 12.0
+	_tut_panel.custom_minimum_size = Vector2(560, 0)
+	layer.add_child(_tut_panel)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 6)
+	_tut_panel.add_child(box)
+	_tut_title = Label.new()
+	box.add_child(_tut_title)
+	_tut_body = Label.new()
+	_tut_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_tut_body.custom_minimum_size = Vector2(520, 0)
+	box.add_child(_tut_body)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	row.alignment = BoxContainer.ALIGNMENT_END
+	box.add_child(row)
+	_tut_back = Button.new()
+	_tut_back.text = "◂ Back"
+	_tut_back.pressed.connect(_on_tut_back)
+	row.add_child(_tut_back)
+	var skip := Button.new()
+	skip.text = "Skip"
+	skip.pressed.connect(_on_tut_skip)
+	row.add_child(skip)
+	_tut_next = Button.new()
+	_tut_next.pressed.connect(_on_tut_next)
+	row.add_child(_tut_next)
+	_tutorial_refresh()
+
+
+func _tutorial_state() -> Dictionary:
+	var months := 0
+	if _sim != null and _sim.is_ready():
+		months = _sim.month_index - _tut_start_month
+	return {
+		"house": _hex.count_structures("house"),
+		"well_l1": _hex.count_structures("well_l1"),
+		"ditch_berm": _hex.count_structures("ditch_berm"),
+		"mesquite": _hex.count_plants("mesquite"),
+		"months": months,
+	}
+
+
+func _tutorial_refresh() -> void:
+	if _tut_panel == null:
+		return
+	var step: Dictionary = TutScript.step_at(_tut_idx)
+	_tut_title.text = "Learn as you play — step %d of %d: %s" % [
+		_tut_idx + 1, TutScript.step_count(), String(step["title"])]
+	_tut_body.text = String(step["body"])
+	_tut_back.disabled = _tut_idx == 0
+	var req := String(step["require"])
+	_tut_next.text = "Play! ▸" if req == "finish" else "Next ▸"
+
+
+func _tutorial_on_progress() -> void:
+	if _tut_done or _tut_panel == null or not _tut_panel.visible:
+		return
+	if _hex == null or not _hex.is_ready():
+		return
+	var state := _tutorial_state()
+	var advanced := false
+	while _tut_idx < TutScript.step_count():
+		var req := String(TutScript.step_at(_tut_idx)["require"])
+		if req == "continue" or req == "finish":
+			break
+		if not TutScript.is_satisfied(req, state):
+			break
+		_tut_idx += 1
+		advanced = true
+	if advanced:
+		if _tut_idx >= TutScript.step_count():
+			_tut_idx = TutScript.step_count() - 1
+		_tutorial_refresh()
+		_refresh_hud("Nice! Tutorial step %d of %d." % [_tut_idx + 1, TutScript.step_count()])
+
+
+func _on_tut_next() -> void:
+	if _tut_done or _tut_panel == null or not _tut_panel.visible:
+		return
+	var req := String(TutScript.step_at(_tut_idx)["require"])
+	if req == "finish":
+		_tut_done = true
+		_tut_panel.visible = false
+		_refresh_hud("Tutorial done — the garden is yours.")
+		return
+	if req == "continue":
+		_tut_idx = mini(_tut_idx + 1, TutScript.step_count() - 1)
+		_tutorial_refresh()
+		_tutorial_on_progress()
+
+
+func _on_tut_back() -> void:
+	if _tut_done or _tut_panel == null or not _tut_panel.visible:
+		return
+	_tut_idx = maxi(_tut_idx - 1, 0)
+	_tutorial_refresh()
+
+
+func _on_tut_skip() -> void:
+	_tut_done = true
+	if _tut_panel != null:
+		_tut_panel.visible = false
+	_refresh_hud("Tutorial skipped — build a house, a well, and a plant, then press Next.")
+
+
 func _on_item_button(item_id: String) -> void:
 	_selected = item_id
 	for key in _item_buttons:
@@ -505,6 +662,7 @@ func _on_next() -> void:
 			_refresh_hud("Month sim not ready (tuning/rainfall packs missing?).")
 	else:
 		_refresh_hud("Next is locked: " + _hex.gate_label())
+	_tutorial_on_progress()
 
 
 func _refresh_hud(msg: String) -> void:
@@ -561,6 +719,7 @@ func _try_place_at(screen_pos: Vector2) -> bool:
 		_spawn_marker(hex, _selected)
 		_charge(_selected)
 		_refresh_hud("Placed '%s' at %s." % [_selected, hex])
+		_tutorial_on_progress()
 		return true
 	_refresh_hud("Cannot place '%s' at %s: %s" % [_selected, hex, res.get("reason")])
 	return false
@@ -613,9 +772,12 @@ func _process(delta: float) -> void:
 		_demo_time += delta
 		_yaw += DEMO_ORBIT_SPEED * delta
 		_apply_orbit()
-		while _demo_step < DEMO_EVENTS.size() and _demo_time >= DEMO_EVENTS[_demo_step]["t"]:
-			var ev: Dictionary = DEMO_EVENTS[_demo_step]
-			if ev.has("next"):
+		while _demo_step < _demo_events.size() and _demo_time >= _demo_events[_demo_step]["t"]:
+			var ev: Dictionary = _demo_events[_demo_step]
+			if ev.has("tut"):
+				_on_tut_next()
+				print("Demo: tutorial tap | step %d of %d" % [_tut_idx + 1, TutScript.step_count()])
+			elif ev.has("next"):
 				_on_next()
 				print("Demo: Next pressed | %s | money $%.0f water %.0f gal mh %.0f | %s" % [
 					_sim.month_label(), _sim.money, _sim.water_gal, _sim.mh_bank,
@@ -636,7 +798,7 @@ func _process(delta: float) -> void:
 					_record_failed = true
 					push_error("Frame save failed: %s/frame_%04d.png (err %d)"
 						% [_record_dir, _record_index, ferr])
-		if _demo_time >= DEMO_QUIT_AFTER or _record_index >= DEMO_RECORD_MAX_FRAMES:
+		if _demo_time >= _demo_quit_after or _record_index >= DEMO_RECORD_MAX_FRAMES:
 			var failed := _record_failed or _demo_failed
 			print("Demo %s: %s frames=%d" % ["FAILED" if failed else "finished",
 				_hex.gate_label(), _record_index])
@@ -699,6 +861,7 @@ func _demo_place(item_id: String) -> void:
 		return
 	print("Demo: placed '%s' at %s via %s | %s" % [item_id, hex, via, _hex.gate_label()])
 	_refresh_hud("Demo placed '%s' at %s." % [item_id, hex])
+	_tutorial_on_progress()
 
 
 ## Place N mesquite through the real hex validator (used by the demo to
