@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/tpaulshippy/permaculture/blob/main/data/save_schema.json",
+  "$id": "https://raw.githubusercontent.com/tpaulshippy/permaculture/main/data/save_schema.json",
   "title": "Permaculture single-slot autosave (v1)",
   "description": "Single local JSON slot. One file contains seed + hex states + month + resources. Autosaved on Next, loaded on boot. Corrupt/missing/version-mismatch file MUST NOT crash: loader discards it and starts a fresh seed (see docs/save_spec.md). Spec-only for issue #7; no Godot save/load implementation in this PR.",
   "type": "object",
