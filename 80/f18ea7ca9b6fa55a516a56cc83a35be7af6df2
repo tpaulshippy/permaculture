@@ -1,0 +1,20 @@
+data/mesquite.json
+  h_6bbd00fe0a456a 12-13
+docs/evidence/6/validator_output.txt
+  h_6bbd00fe0a456a 25-26
+scripts/plot_rainfall.py
+  h_6bbd00fe0a456a 17-19,30,39
+scripts/validate_sonoran.py
+  h_6bbd00fe0a456a 3,5,14-24,48-49,56-57,61-70,82
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "80f18ea7ca9b6fa55a516a56cc83a35be7af6df2",
+  "prompts": {},
+  "humans": {
+    "h_6bbd00fe0a456a": {
+      "author": "Paul Shippy <pshippy@gmail.com>"
+    }
+  }
+}
