@@ -1,0 +1,38 @@
+=== Android export preset validation (issue #8) ===
+PASS: export_presets.cfg exists
+PASS: preset.0 section present
+PASS: preset.0.options section present
+PASS: preset platform is Android
+PASS: preset is runnable
+PASS: export_filter is all_resources (shared codebase, no fork)
+PASS: export_path targets a debug APK for device QA
+PASS: export_format=0 (APK)
+PASS: gradle build enabled
+PASS: package/unique_name is set explicitly: "com.tpaulshippy.permaculture"
+PASS: version/code is set: 1
+PASS: version/name is set: "0.1.0"
+PASS: package/signed=true (debug keystore)
+PASS: non-XR app (xr_mode=0)
+PASS: immersive_mode=true
+PASS: arm64-v8a enabled (devices)
+PASS: x86_64 enabled (emulator coverage)
+PASS: 32-bit ABIs off (64-bit Play requirement)
+PASS: launcher_icons/main_192x192 points at a file
+PASS: launcher_icons/main_192x192 exists: icons/android_main_192x192.png
+PASS: icons/android_main_192x192.png is 192x192 (got (192, 192))
+PASS: launcher_icons/adaptive_foreground_432x432 points at a file
+PASS: launcher_icons/adaptive_foreground_432x432 exists: icons/android_adaptive_foreground_432x432.png
+PASS: icons/android_adaptive_foreground_432x432.png is 432x432 (got (432, 432))
+PASS: launcher_icons/adaptive_background_432x432 points at a file
+PASS: launcher_icons/adaptive_background_432x432 exists: icons/android_adaptive_background_432x432.png
+PASS: icons/android_adaptive_background_432x432.png is 432x432 (got (432, 432))
+PASS: permission keys enumerated (147)
+PASS: no Android permissions requested (offenders: [])
+PASS: no custom permissions
+PASS: desktop renderer stays forward_plus
+PASS: mobile renderer override is gl_compatibility
+PASS: handheld orientation is sensor_landscape (4)
+changed vs origin/main: ['.gitignore', 'docs/android.md', 'docs/evidence/8/validator.log', 'export_presets.cfg', 'icons/android_adaptive_background_432x432.png', 'icons/android_adaptive_foreground_432x432.png', 'icons/android_main_192x192.png', 'project.godot', 'tools/validate_android_preset.py']
+PASS: no gameplay fork (non-packaging changes: [])
+---
+ALL CHECKS PASSED

@@ -1,2 +1,8 @@
 .godot/
 .godot/**
+# Android export outputs (issue #8). The APK/AAB is a build artifact;
+# evidence stills/video live under docs/evidence/8/ instead.
+build/
+build/**
+android/
+android/**
