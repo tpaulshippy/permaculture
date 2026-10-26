@@ -84,7 +84,10 @@ check(g.get("water_need_gal_per_mo") == 250, "mesquite water need matches tuning
 check(g.get("yield_usd_per_mo") == 12 and g.get("yield_start_month") == 12, "mesquite yield matches tuning ($12/mo from month 12)")
 check("game_stats_proposed" in m and all(k not in m for k in ("cost_usd", "water_need_gal_per_mo", "yield_usd_per_mo")), "mesquite stats namespaced under game_stats_proposed, separate from tuning schema")
 srcs = m.get("sources", [])
-check(isinstance(srcs, list) and all(isinstance(s, str) for s in srcs) and len(srcs) >= 2, "mesquite cites >=2 sources")
+srcs_ok = (isinstance(srcs, list) and len(srcs) >= 2
+           and all(isinstance(s, str) and s.strip() for s in srcs)
+           and sum(1 for s in srcs for _ in re.findall(r"https://[^\s)]+", s)) >= 2)
+check(srcs_ok, "mesquite cites >=2 non-empty sources, >=2 with URLs")
 seasons = r["seasons"]
 check(sorted(sum([seasons[k] for k in ("winter_rains", "foresummer_drought", "monsoon", "autumn")], [])) == sorted(r["months"]), "seasons partition all 12 months exactly once")
 penalty = set(surv.get("foresummer_penalty_months", []))

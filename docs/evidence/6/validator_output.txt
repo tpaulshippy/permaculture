@@ -26,7 +26,7 @@ PASS: mesquite cost/manhours match feat/4 tuning (40 USD, 2 mh)
 PASS: mesquite water need matches tuning (250 gal/mo)
 PASS: mesquite yield matches tuning ($12/mo from month 12)
 PASS: mesquite stats namespaced under game_stats_proposed, separate from tuning schema
-PASS: mesquite cites >=2 sources
+PASS: mesquite cites >=2 non-empty sources, >=2 with URLs
 PASS: seasons partition all 12 months exactly once
 PASS: penalty months equal the foresummer drought season and cover exactly the non-optimal months
 PASS: optimal months are all known month labels
