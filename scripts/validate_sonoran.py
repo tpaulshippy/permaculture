@@ -49,7 +49,7 @@ if any(k not in r for k in ("months", "rainfall_mm", "rainfall_in", "annual_mm",
 
 check(r.get("units") == "mm/month", "rainfall units are mm/month")
 check(r["months"] == ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], "month labels are the canonical ordered Jan-Dec labels")
-check(all(v >= 0 for v in r["rainfall_mm"]) and all(v >= 0 for v in r["rainfall_in"]), "all rainfall values >= 0 in both units")
+check(all(v >= 0 for v in r["rainfall_mm"] + [r["annual_mm"]]) and all(v >= 0 for v in r["rainfall_in"] + [r["annual_in"]]), "all rainfall values >= 0 in both units, monthly and annual")
 check(abs(sum(r["rainfall_mm"]) - r["annual_mm"]) < 0.5, f"annual_mm {r['annual_mm']} ~= sum {sum(r['rainfall_mm']):.1f} (12 values rounded to 0.1 mm)")
 try:
     src_text = r.get("source", "")
@@ -96,7 +96,7 @@ check(set(surv.get("optimal_plant_months", [])) <= set(r["months"]), "optimal mo
 check(surv.get("foresummer_survival_multiplier") == 0.6 and surv.get("foresummer_survival_multiplier_irrigated") == 1.0, "survival multipliers numeric (0.6 unirrigated, 1.0 at establishment rate)")
 check("establishment_yield_rule" in ext, "yield-during-establishment rule is defined (yield mo 12 vs watering thru mo 18)")
 check("growth_cm_per_year_note" in m, "growth rate is marked as a game-balance representative value")
-check(is_num(m.get("taproot_m")), "taproot_m is a numeric metric (qualifier in taproot_note)")
+check(is_num(m.get("taproot_m")) and m.get("taproot_m") > 0, "taproot_m is a positive numeric metric (qualifier in taproot_note)")
 
 try:
     info_text = (ROOT / "docs/sonoran_info.md").read_text()
