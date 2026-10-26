@@ -1,42 +1,43 @@
-# permaculture
+# Permaculture
 
-## Terrain MVP (issue #2)
+A 3D desert-garden strategy game in **Godot 4**. You shape a 2-acre Sonoran plot where **water flows downhill** — place a house, a well, and plants, then advance month by month, balancing water, money, and labor against the desert's rainfall year.
 
-Base Godot 4.x project: seeded Sonoran heightmap mesh (fixed seed 1337,
-20x20 cells ≈ hex equivalent) + D8 downhill accumulation exposing a
-per-hex moisture API (`TerrainWater.get_moisture_at()`).
+> MVP status: single Sonoran garden, local play. Accounts, win/lose screens, and extra biomes are future work (see issue #1).
 
-- `project.godot`, `scenes/terrain.tscn`, `scripts/main.gd` — scene + driver
-- `scripts/terrain_config.gd` — tuning constants (grid, seed, landform, water)
-- `scripts/terrain_water.gd` — deterministic heightfield + D8 + moisture (no UI dependency)
-- `scripts/terrain_mesh.gd` — ArrayMesh builder, TERRAIN / MOISTURE render modes
-- `scripts/future_stubs.gd` — stubs for store, save, export presets (owned by other issues)
-- `tests/test_terrain.gd` — headless test, 34 checks, exit code 0 on pass (1 on failure)
+## Demo
+
+Watch a full turn play out — placement, Next gating, live bars, and the water warning path. Real in-engine footage (Godot 4.7.2, 1280x720):
+
+<video src="docs/evidence/5/demo.mp4" controls="controls" width="100%"></video>
+
+*(If the player doesn't render, [download/watch docs/evidence/5/demo.mp4](docs/evidence/5/demo.mp4). Stills: [locked](docs/evidence/5/demo_frame_locked.png) · [unlocked](docs/evidence/5/demo_frame_unlocked.png) · [warning](docs/evidence/5/demo_frame_warned.png). Placement close-up: [docs/evidence/3/demo.mp4](docs/evidence/3/demo.mp4).)*
+
+What the demo shows: the camera orbits the seeded Sonoran terrain while house → well L1 → ditch-berm → mesquite are placed (the HUD gate flips `Next LOCKED` → `Next UNLOCKED` once house + well + plant exist). Pressing **Next** advances Month 1 → 2 and the bars update (money ≈ $2965, water table ≈ 59%, 107 manhours). Planting 24 extra mesquite and hitting Next 3 more times outruns the well, tripping the red irrigation/water warnings — which advise but never block (MVP has no game-over yet).
+
+## How to play
+
+1. **Run it:** `godot --path .` (Godot 4.x). Scripted demo: `godot --path . -- --demo`.
+2. **Pick a tool:** keys **1–4** (or HUD buttons) — `1` house, `2` well L1, `3` ditch-berm, `4` mesquite.
+3. **Place it:** left-**click** the terrain. House likes dry/gentle ground, wells want moist low spots, ditches belong mid-slope off the flow channel, mesquite goes anywhere free. **Drag** to orbit, **wheel** to zoom.
+4. **Unlock Next:** you must place a **house + well + one plant** before the **Next** button (or **N** key) enables.
+5. **Take turns:** each Next press = one month. The house pays 160 manhours/mo (minus upkeep), the well pumps 2500 gal/mo from the groundwater stock, ditches capture +12% of that month's rainfall back into the table, mesquite drinks 250 gal/mo and pays $12/mo from month 12. Rainfall follows the real Tucson typical year (monsoon Jul–Sep, dry Apr–Jun); wind is display-only.
+6. **Read the bars:** money / water-table % / manhours update every month, plus a monthly summary line. Red banners (dry well, empty table, negative money) warn but don't stop you — tune your build until the garden holds water through the dry months.
+
+## Repo map
+
+- `scripts/terrain_water.gd` — seeded heightfield + D8 downhill flow + per-hex moisture
+- `scripts/hex_grid.gd` — 20x20 gameplay overlay, placement rules, Next gating
+- `scripts/turn_sim.gd` — monthly economy (water/money/manhours)
+- `scripts/main.gd` — camera, raycast placement, HUD, Next wizard
+- `data/` — `tuning.json` (costs), `sonoran_rainfall.json`, `mesquite.json`, save schema + example
+- `tests/` — headless logic tests (`test_terrain`, `test_hex`, `test_hud`)
+- `docs/evidence/` — real captures per issue (`2/` terrain, `3/` hex, `5/` HUD, `8/` Android, `9/` iOS)
+- `export_presets.cfg` — Android APK + iOS IPA/Xcode presets (single shared codebase)
 
 ```sh
 godot --headless --path . --script res://tests/test_terrain.gd
-```
-
-Evidence: `docs/evidence/2/` (viewport renders + test log).
-
-## Hex overlay + placement rules (issue #3)
-
-20x20 hex gameplay overlay on top of the issue #2 terrain. Mesh owns height;
-each hex owns gameplay state. Avg-height sampled from the heightfield (3x3
-cell mean), moisture from the D8 model. Place house / well L1 / ditch-berm /
-mesquite with raycast validation; Q13 gating (house + well + plant required)
-locks Next until satisfied. 4 native mesquite hint ghosts pre-placed.
-
-- `scripts/hex_grid.gd` — pure-logic overlay: sampling, placement rules,
-  Q13 gating, save-shaped snapshot (no UI dependency)
-- `scripts/main.gd` — orbit camera, click-to-place raycast, HUD + Next
-  button, scripted `--demo` / `--demo-record` for evidence video
-- `tests/test_hex.gd` — headless test, 55 checks, exit code 0 on pass (1 on failure)
-
-```sh
 godot --headless --path . --script res://tests/test_hex.gd
-godot --path . -- --capture-mode=hex --capture-path=/tmp/hex_overlay.png
-godot --path . -- --demo
+godot --headless --path . --script res://tests/test_hud.gd
+python3 scripts/validate_tuning.py && python3 scripts/validate_sonoran.py
+python3 tools/validate_save.py && python3 tools/validate_android_preset.py
 ```
-
-Evidence: `docs/evidence/3/` (demo video, stills, test log).
