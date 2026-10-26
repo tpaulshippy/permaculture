@@ -76,7 +76,8 @@ check(g.get("cost_usd") == 40 and g.get("build_manhours") == 2, "mesquite cost/m
 check(g.get("water_need_gal_per_mo") == 250, "mesquite water need matches tuning (250 gal/mo)")
 check(g.get("yield_usd_per_mo") == 12 and g.get("yield_start_month") == 12, "mesquite yield matches tuning ($12/mo from month 12)")
 check("game_stats_proposed" in m and all(k not in m for k in ("cost_usd", "water_need_gal_per_mo", "yield_usd_per_mo")), "mesquite stats namespaced under game_stats_proposed, separate from tuning schema")
-check(len(m.get("sources", [])) >= 2, "mesquite cites >=2 sources")
+srcs = m.get("sources", [])
+check(isinstance(srcs, list) and all(isinstance(s, str) for s in srcs) and len(srcs) >= 2, "mesquite cites >=2 sources")
 seasons = r.get("seasons", {})
 check(sorted(sum([seasons.get(k, []) for k in ("winter_rains", "foresummer_drought", "monsoon", "autumn")], [])) == sorted(r.get("months", [])), "seasons partition all 12 months exactly once")
 penalty = set(surv.get("foresummer_penalty_months", []))
@@ -87,7 +88,11 @@ check("establishment_yield_rule" in ext, "yield-during-establishment rule is def
 check("growth_cm_per_year_note" in m, "growth rate is marked as a game-balance representative value")
 check(isinstance(m.get("taproot_m"), (int, float)), "taproot_m is a numeric metric (qualifier in taproot_note)")
 
-info = (ROOT / "docs/sonoran_info.md").read_text().lower()
+try:
+    info_text = (ROOT / "docs/sonoran_info.md").read_text()
+except OSError:
+    info_text = ""
+info = info_text.lower()
 for kw in ["best time to plant", "problems", "strategies", "monsoon", "caliche"]:
     check(kw in info, f"info text covers '{kw}'")
 
