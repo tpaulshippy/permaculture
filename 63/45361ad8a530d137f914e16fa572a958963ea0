@@ -1,0 +1,14 @@
+docs/evidence/5/plan.md
+  h_6bbd00fe0a456a 1-18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6345361ad8a530d137f914e16fa572a958963ea0",
+  "prompts": {},
+  "humans": {
+    "h_6bbd00fe0a456a": {
+      "author": "Paul Shippy <pshippy@gmail.com>"
+    }
+  }
+}
