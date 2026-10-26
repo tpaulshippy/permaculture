@@ -9,6 +9,7 @@ labor, monthly money pre-yield + mature, monthly water surplus) against
 meta.sim_baseline.
 """
 import json
+import math
 import sys
 from collections import Counter
 from pathlib import Path
@@ -37,7 +38,7 @@ def fail(msg):
 
 
 def is_num(x):
-    return isinstance(x, (int, float)) and not isinstance(x, bool)
+    return isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x)
 
 
 def check_equal(label, actual, expected):
@@ -59,7 +60,7 @@ def main():
     print(f"OK: parses ({len(raw)} bytes)")
 
     for key in ("meta", "items"):
-        if key not in data:
+        if not isinstance(data, dict) or key not in data:
             fail(f"missing top-level key '{key}'")
     if errors:
         return report()
@@ -70,8 +71,12 @@ def main():
         return report()
 
     # Reject duplicate IDs and count mismatches before collapsing into a map.
+    # (Count only string IDs: unhashable IDs are reported, not counted.)
     ids = [i.get("id") if isinstance(i, dict) else None for i in items]
-    dupes = sorted(k for k, n in Counter(ids).items() if n > 1)
+    for bad in ids:
+        if not isinstance(bad, str):
+            fail(f"item id must be a string, got {bad!r}")
+    dupes = sorted(k for k, n in Counter(i for i in ids if isinstance(i, str)).items() if n > 1)
     if dupes:
         fail(f"duplicate item ids: {dupes}")
     if len(items) != len(EXPECTED_IDS):
@@ -117,18 +122,24 @@ def main():
                     fail(f"{k}.{field} must be >= 0, got {v!r}")
     print("OK: per-item rules (house mh/mo, well pump, ditch retention, mesquite need/yield; nonnegative cost/labor)")
 
+    # Baseline containers must be mappings before any field access below.
+    base = data["meta"].get("sim_baseline") if isinstance(data.get("meta"), dict) else None
+    if not isinstance(base, dict):
+        fail("meta.sim_baseline must be an object")
+        return report()
+    bc = base.get("balance_check_monthly")
+    if not isinstance(bc, dict):
+        fail("meta.sim_baseline.balance_check_monthly must be an object")
+        return report()
+
     # opening labor-grant feasibility: the grant must cover the first build.
-    try:
-        base = data["meta"]["sim_baseline"]
-        grant = base.get("starting_manhours_mh")
-        if not is_num(grant):
-            fail(f"sim_baseline.starting_manhours_mh must be numeric, got {grant!r}")
-        elif grant < h.get("build_manhours", float("inf")):
-            fail(f"starting grant {grant} mh cannot cover first house build {h.get('build_manhours')} mh")
-        else:
-            print(f"OK: starting grant {grant} mh covers house build {h.get('build_manhours')} mh")
-    except (KeyError, TypeError) as e:
-        fail(f"starting-grant check failed: {e}")
+    grant = base.get("starting_manhours_mh")
+    if not is_num(grant):
+        fail(f"sim_baseline.starting_manhours_mh must be a finite number, got {grant!r}")
+    elif grant < h.get("build_manhours", float("inf")):
+        fail(f"starting grant {grant} mh cannot cover first house build {h.get('build_manhours')} mh")
+    else:
+        print(f"OK: starting grant {grant} mh covers house build {h.get('build_manhours')} mh")
 
     # balance arithmetic: 1 house + 1 well + 2 ditch + 4 mesquite
     # (explicit conditionals: must also hold under `python -O`).
@@ -143,7 +154,6 @@ def main():
         rain_ref = base["rainfall_reference_gal_per_mo"]
         base_cap = base["base_rain_capture_gal_per_mo"]
         water = w["pump_gal_per_mo"] + base_cap + 2 * d["water_gal_per_mo"] + 4 * m["water_gal_per_mo"]
-        bc = base["balance_check_monthly"]
         check_equal("money_upfront_usd", money, bc.get("money_upfront_usd"))
         check_equal("money_upfront_usd vs 7460", money, 7460)
         check_equal("labor_upfront_mh", labor, bc.get("labor_upfront_mh"))
@@ -153,8 +163,8 @@ def main():
         check_equal("provided_mh_per_mo", h.get("provides_manhours_per_mo"), bc.get("provided_mh_per_mo"))
         check_equal("money_per_mo_usd_pre_yield", money_pre, bc.get("money_per_mo_usd_pre_yield"))
         check_equal("money_per_mo_usd_mature", money_mature, bc.get("money_per_mo_usd_mature"))
-        if not is_num(bc.get("water_per_mo_gal")) or isinstance(bc.get("water_per_mo_gal"), bool):
-            fail(f"balance_check_monthly.water_per_mo_gal must be numeric (gal/mo), got {bc.get('water_per_mo_gal')!r}")
+        if not is_num(bc.get("water_per_mo_gal")):
+            fail(f"balance_check_monthly.water_per_mo_gal must be a finite number (gal/mo), got {bc.get('water_per_mo_gal')!r}")
         else:
             check_equal("water_per_mo_gal", water, bc.get("water_per_mo_gal"))
         check_equal("rainfall_reference_gal_per_mo vs 1000", rain_ref, 1000)
