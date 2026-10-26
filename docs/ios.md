@@ -50,18 +50,22 @@ xcodebuild -project build/ios/permaculture.xcodeproj \
   -target permaculture -configuration Release -sdk iphonesimulator \
   -arch x86_64 ONLY_ACTIVE_ARCH=NO build \
   CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
-SIMCTL=/Library/Developer/PrivateFrameworks/CoreSimulator.framework/Versions/A/Resources/bin/simctl
-$SIMCTL install booted <DerivedData>/Release-iphonesimulator/permaculture.app
+SIMCTL=${SIMCTL:-xcrun simctl}
+$SIMCTL install booted \
+  build/ios/build/Release-iphonesimulator/permaculture.app
 $SIMCTL launch booted org.permaculture.terrain
 $SIMCTL io booted screenshot docs/evidence/9/still.png
 $SIMCTL io booted recordVideo docs/evidence/9/demo.mp4
+# ...let it record, then Ctrl-C to finalize the file.
 ```
 
 Environment note (2026-10-26, macOS 26.6.2, Xcode 27.1): the
 `xcrun`/`usr/bin/simctl` wrapper hangs because it runs
 `xcodebuild -runFirstLaunch` when `/Library/.../CoreSimulator.framework`
-(1171.7) is older than Xcode's expected 1174.9.2. Calling the real
-`simctl` inside the framework directly (path above) works fine.
+(1171.7) is older than Xcode's expected 1174.9.2. In that situation
+override the default, e.g.
+`SIMCTL=/Library/Developer/PrivateFrameworks/CoreSimulator.framework/Versions/A/Resources/bin/simctl`,
+which calls the real `simctl` inside the framework directly.
 
 ## QA results
 
