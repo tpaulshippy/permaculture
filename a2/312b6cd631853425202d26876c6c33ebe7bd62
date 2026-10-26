@@ -1,0 +1,22 @@
+.gitignore
+  h_6bbd00fe0a456a 1,4-5
+docs/android.md
+  h_6bbd00fe0a456a 63-73
+docs/evidence/8/commands.log
+  h_6bbd00fe0a456a 8-11
+docs/evidence/8/validator.log
+  h_6bbd00fe0a456a 37-38,40-41
+tools/validate_android_preset.py
+  h_6bbd00fe0a456a 5-15,37,55-58,62,64,71-74,76,86-125,214,218-222,229,231,233,235,238-240,246-249,251-255,257-262,265-283
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a2312b6cd631853425202d26876c6c33ebe7bd62",
+  "prompts": {},
+  "humans": {
+    "h_6bbd00fe0a456a": {
+      "author": "Paul Shippy <pshippy@gmail.com>"
+    }
+  }
+}
