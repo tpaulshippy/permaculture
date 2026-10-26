@@ -101,8 +101,13 @@ def git_worktree_changed():
 
 
 def proj_kv(text):
-    """Godot cfg key=value pairs, ignoring section headers and ';' comments."""
+    """Godot cfg key=value pairs, ignoring section headers and ';' comments.
+
+    Returns (kv, duplicates): kv holds the effective (last) value per key,
+    duplicates lists keys assigned more than once.
+    """
     kv = {}
+    duplicates = set()
     for ln in text.splitlines():
         s = ln.strip()
         if not s or s.startswith(";") or s.startswith("["):
@@ -110,8 +115,11 @@ def proj_kv(text):
         if "=" not in s:
             continue
         k, _, v = s.partition("=")
-        kv[k.strip()] = v.strip()
-    return kv
+        k = k.strip()
+        if k in kv:
+            duplicates.add(k)
+        kv[k] = v.strip()
+    return kv, duplicates
 
 
 # project.godot keys this packaging issue is allowed to add/change vs base.
@@ -271,8 +279,8 @@ def main():
         check(False, "could not read base project.godot for key diff — "
                      "cannot prove no gameplay fork")
     else:
-        base_kv = proj_kv(base_text)
-        cur_kv = proj_kv(proj_text)
+        base_kv, _ = proj_kv(base_text)
+        cur_kv, dupes = proj_kv(proj_text)
         removed = sorted(k for k in base_kv if k not in cur_kv)
         altered = sorted(k for k in cur_kv
                          if k not in base_kv or base_kv[k] != cur_kv[k])
@@ -280,6 +288,21 @@ def main():
         check(not removed, "project.godot removes no keys: %s" % removed)
         check(not unexpected,
               "project.godot changes are packaging-only: %s" % unexpected)
+        check(not dupes,
+              "project.godot has no duplicate key assignments: %s"
+              % sorted(dupes))
+        # Effective values: a later duplicate/conflicting line must not
+        # override the checked setting (last assignment wins in Godot cfg).
+        expected_values = {
+            "renderer/rendering_method": '"forward_plus"',
+            "window/handheld/orientation": "4",
+            "renderer/rendering_method.mobile": '"gl_compatibility"',
+            "textures/vram_compression/import_etc2_astc": "true",
+        }
+        for k, want in expected_values.items():
+            check(cur_kv.get(k) == want,
+                  "project.godot effective %s is %s (got %s)"
+                  % (k, want, cur_kv.get(k)))
 
     print("---")
     if FAILURES:

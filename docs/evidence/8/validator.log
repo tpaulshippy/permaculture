@@ -35,9 +35,14 @@ PASS: mobile renderer override is gl_compatibility
 PASS: ETC2/ASTC import enabled (Android export requirement)
 PASS: handheld orientation is sensor_landscape (4)
 committed vs origin/main: ['.gitignore', 'docs/android.md', 'docs/evidence/8/commands.log', 'docs/evidence/8/demo.mp4', 'docs/evidence/8/still.png', 'docs/evidence/8/validator.log', 'export_presets.cfg', 'icons/android_adaptive_background_432x432.png', 'icons/android_adaptive_foreground_432x432.png', 'icons/android_main_192x192.png', 'project.godot', 'tools/validate_android_preset.py']
-worktree changes: ['.gitignore', 'docs/android.md', 'docs/evidence/8/commands.log', 'docs/evidence/8/validator.log', 'tools/validate_android_preset.py']
+worktree changes: ['docs/evidence/8/validator.log', 'tools/validate_android_preset.py']
 PASS: no gameplay fork (non-packaging changes: [])
 PASS: project.godot removes no keys: []
 PASS: project.godot changes are packaging-only: []
+PASS: project.godot has no duplicate key assignments: []
+PASS: project.godot effective renderer/rendering_method is "forward_plus" (got "forward_plus")
+PASS: project.godot effective window/handheld/orientation is 4 (got 4)
+PASS: project.godot effective renderer/rendering_method.mobile is "gl_compatibility" (got "gl_compatibility")
+PASS: project.godot effective textures/vram_compression/import_etc2_astc is true (got true)
 ---
 ALL CHECKS PASSED
