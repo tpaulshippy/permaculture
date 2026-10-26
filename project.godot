@@ -22,10 +22,12 @@ window/handheld/orientation=4
 [rendering]
 
 renderer/rendering_method="forward_plus"
-; Android (all mobile): GLES3 Compatibility renderer. Widest device + emulator
-; support (no Vulkan dependency); desktop keeps Forward Plus. Packaging-only
-; override, no gameplay code change.
-renderer/rendering_method.mobile="gl_compatibility"
-; Required for Android export: importer writes ETC2/ASTC variants used by the
-; mobile build. Packaging-only; desktop imports unchanged.
+; Mobile renderer for all handheld exports (issues #8 Android, #9 iOS).
+; Desktop keeps Forward Plus. Packaging-only override, no gameplay code change.
+; NOTE: Android QA (#15) verified on gl_compatibility; iOS requires "mobile".
+; Union keeps "mobile" (works on both via Vulkan/Metal); low-end Android
+; gl_compatibility fallback is a follow-up if needed.
+renderer/rendering_method.mobile="mobile"
+; Required for mobile export: importer writes ETC2/ASTC variants used by the
+; mobile builds. Packaging-only; desktop imports unchanged.
 textures/vram_compression/import_etc2_astc=true

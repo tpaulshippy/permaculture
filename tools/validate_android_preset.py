@@ -236,8 +236,9 @@ def main():
           % hash_comments)
     check('renderer/rendering_method="forward_plus"' in proj_lines,
           "desktop renderer stays forward_plus")
-    check('renderer/rendering_method.mobile="gl_compatibility"' in proj_lines,
-          "mobile renderer override is gl_compatibility")
+    check('renderer/rendering_method.mobile="gl_compatibility"' in proj_lines
+          or 'renderer/rendering_method.mobile="mobile"' in proj_lines,
+          "mobile renderer override is gl_compatibility or mobile (union with iOS #9; iOS requires mobile)")
     check("textures/vram_compression/import_etc2_astc=true" in proj_lines,
           "ETC2/ASTC import enabled (Android export requirement)")
     check("window/handheld/orientation=4" in proj_lines,
@@ -296,7 +297,7 @@ def main():
         expected_values = {
             "renderer/rendering_method": '"forward_plus"',
             "window/handheld/orientation": "4",
-            "renderer/rendering_method.mobile": '"gl_compatibility"',
+            "renderer/rendering_method.mobile": '"mobile"',  # union with iOS #9 (was gl_compatibility on feat/8-android; iOS requires mobile)
             "textures/vram_compression/import_etc2_astc": "true",
         }
         for k, want in expected_values.items():

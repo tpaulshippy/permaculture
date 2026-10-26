@@ -1,9 +1,12 @@
 /.godot/
-# Android export outputs (issue #8). The APK/AAB is a build artifact;
-# evidence stills/video live under docs/evidence/8/ instead.
+.godot/
+.godot/**
+# Export outputs (issues #8, #9). APK/AAB/IPA are build artifacts;
+# evidence stills/video live under docs/evidence/8/ and docs/evidence/9/ instead.
 /build/
+/build/**
 /android/
+/android/**
 # Godot-generated import metadata (editor noise, none tracked in this repo).
-# Keeps `git status` clean so tools/validate_android_preset.py sees only
-# real packaging changes.
+# Keeps `git status` clean so preset validators see only real packaging changes.
 *.import
