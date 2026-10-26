@@ -55,7 +55,7 @@ except (TypeError, ValueError):
     src_hosts = []
 check(any(h == "weather.gov" or h.endswith(".weather.gov") for h in src_hosts), "rainfall cites NWS source with URL")
 check(len(r.get("rainfall_in", [])) == 12, "rainfall_in has 12 source values")
-check(abs(sum(r["rainfall_in"]) - r["annual_in"]) < 0.05, "annual_in matches monthly sum")
+check(abs(sum(r["rainfall_in"]) - r["annual_in"]) < 0.07, "annual_in matches monthly sum (12 x 0.005 + 0.005 rounding)")
 check(all(abs(mm - inch * 25.4) < 0.06 for mm, inch in zip(r["rainfall_mm"], r["rainfall_in"])), "each rainfall_mm matches rainfall_in x25.4 (0.1 mm rounding)")
 # monsoon peak check (seasons["monsoon"] months dominate)
 monsoon_months = r.get("seasons", {}).get("monsoon", ["Jul", "Aug", "Sep"])
@@ -95,14 +95,18 @@ check(is_num(m.get("taproot_m")), "taproot_m is a numeric metric (qualifier in t
 
 try:
     info_text = (ROOT / "docs/sonoran_info.md").read_text()
-except OSError:
+except (OSError, ValueError):
     info_text = ""
 info = info_text.lower()
 for kw in ["best time to plant", "problems", "strategies", "monsoon", "caliche"]:
     check(kw in info, f"info text covers '{kw}'")
 
 chart = ROOT / "docs/evidence/6/rainfall_chart.png"
-check(chart.exists() and chart.stat().st_size > 5000, "evidence chart PNG exists and non-trivial")
+try:
+    chart_bytes = chart.read_bytes() if chart.is_file() else b""
+except (OSError, ValueError):
+    chart_bytes = b""
+check(chart_bytes[:8] == b"\x89PNG\r\n\x1a\n" and len(chart_bytes) > 5000, "evidence chart is a valid non-trivial PNG")
 fingerprint = hashlib.sha256(json.dumps({"months": r["months"], "rainfall_mm": r["rainfall_mm"], "seasons": seasons,
                                           "annual_mm": r["annual_mm"], "station": r["station"]},
                                          sort_keys=True).encode()).hexdigest()

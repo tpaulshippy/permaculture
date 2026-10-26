@@ -16,7 +16,7 @@ PASS: all rainfall values >= 0
 PASS: annual_mm 269.5 ~= sum 269.3 (12 values rounded to 0.1 mm)
 PASS: rainfall cites NWS source with URL
 PASS: rainfall_in has 12 source values
-PASS: annual_in matches monthly sum
+PASS: annual_in matches monthly sum (12 x 0.005 + 0.005 rounding)
 PASS: each rainfall_mm matches rainfall_in x25.4 (0.1 mm rounding)
 PASS: monsoon Jul/Aug/Sep share 52% > 45%
 PASS: mesquite species set
@@ -42,7 +42,7 @@ PASS: info text covers 'problems'
 PASS: info text covers 'strategies'
 PASS: info text covers 'monsoon'
 PASS: info text covers 'caliche'
-PASS: evidence chart PNG exists and non-trivial
+PASS: evidence chart is a valid non-trivial PNG
 PASS: evidence chart fingerprint matches current rainfall data (regen plot after data changes)
 
 ALL CHECKS PASSED
