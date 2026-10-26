@@ -10,7 +10,8 @@ Station: Tucson Intl Airport area; cross-check NOAA U.S. Climate Normals.
 - **Winter rains (Dec–Mar, ~80 mm total):** Gentle Pacific frontal storms.
   Cool (highs 65–76 °F), best soil moisture of the year. Light but reliable.
 - **Foresummer drought (Apr–Jun):** Hottest, driest stretch. Highs 83–101 °F,
-  almost no rain (~17 mm total). New plantings die without irrigation.
+  almost no rain (~17 mm total). Unirrigated new plantings face severe
+  establishment stress — mesquite establishes ~40% worse without extra watering.
 - **Monsoon (Jul–Sep, ~140 mm, over half the annual total):** Intense
   afternoon thunderstorms, flash floods, dust storms, extreme heat (highs 95–100 °F).
   Most effective planting window — heat + water together.
@@ -23,7 +24,7 @@ Station: Tucson Intl Airport area; cross-check NOAA U.S. Climate Normals.
    warm soil + coming rains = fast root growth. Dig basins/swales BEFORE the
    storms so runoff soaks in. Note: June is still in the Apr–Jun penalty
    window (poor establishment without extra watering) — wait for July.
-2. **Post-monsoon / fall (Sep–Oct)** — second best: warm soil, milder air,
+2. **Late monsoon into fall (Sep–Oct)** — second best: warm soil, milder air,
    stored soil moisture; roots establish over winter.
 3. **Late winter (Feb–Mar)** — third: cool-season moisture still in soil;
    plant early enough to root before the Apr–Jun drought.
@@ -35,8 +36,8 @@ heat-lovers, fall/winter for cool-season annuals and perennials.
 
 ## Typical problems
 
-- **Foresummer desiccation:** Apr–Jun kills unirrigated seedlings; even mature
-  trees stress. Symptom: leaf drop, scorched margins.
+- **Foresummer desiccation:** Apr–Jun causes severe losses in unirrigated
+  seedlings; even mature trees stress. Symptom: leaf drop, scorched margins.
 - **Monsoon washouts:** Intense cells erode swales/berms, drown seedlings in
   pooling clay, snap weak limbs (microbursts).
 - **Caliche & poor infiltration:** Cemented calcium layer blocks roots and

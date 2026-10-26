@@ -1,11 +1,13 @@
 PASS: rainfall units are mm/month
 PASS: rainfall_mm has 12 values
 PASS: months has 12 labels
+PASS: month labels are 12 unique names (season lookups use .index)
 PASS: all rainfall values >= 0
-PASS: annual_mm 269.5 ~= sum 269.3
+PASS: annual_mm 269.5 ~= sum 269.3 (12 values rounded to 0.1 mm)
 PASS: rainfall cites NWS source with URL
 PASS: rainfall_in has 12 source values
 PASS: annual_in matches monthly sum
+PASS: each rainfall_mm matches rainfall_in x25.4 (0.1 mm rounding)
 PASS: monsoon Jul/Aug/Sep share 52% > 45%
 PASS: mesquite species set
 PASS: mesquite nitrogen_fixer true
@@ -17,11 +19,14 @@ PASS: mesquite stats namespaced under game_stats_proposed, separate from tuning 
 PASS: mesquite cites >=2 sources
 PASS: seasons partition all 12 months exactly once
 PASS: every month has a defined survival effect (optimal except Apr-Jun penalty)
+PASS: foresummer penalty is a numeric 0.6 multiplier on Apr-Jun
+PASS: taproot_m is a numeric metric (qualifier in taproot_note)
 PASS: info text covers 'best time to plant'
 PASS: info text covers 'problems'
 PASS: info text covers 'strategies'
 PASS: info text covers 'monsoon'
 PASS: info text covers 'caliche'
 PASS: evidence chart PNG exists and non-trivial
+PASS: evidence chart is newer than the rainfall data (regenerate after data changes)
 
 ALL CHECKS PASSED
