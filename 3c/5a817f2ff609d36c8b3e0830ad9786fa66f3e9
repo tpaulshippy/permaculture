@@ -1,0 +1,16 @@
+docs/evidence/5/demo_console.log
+  h_6bbd00fe0a456a 11-12,14
+scripts/turn_sim.gd
+  h_6bbd00fe0a456a 251-255,263
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3c5a817f2ff609d36c8b3e0830ad9786fa66f3e9",
+  "prompts": {},
+  "humans": {
+    "h_6bbd00fe0a456a": {
+      "author": "Paul Shippy <pshippy@gmail.com>"
+    }
+  }
+}
