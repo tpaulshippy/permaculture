@@ -45,7 +45,11 @@ check(len(r.get("months", [])) == 12, "months has 12 labels")
 check(len(set(r.get("months", []))) == 12, "month labels are 12 unique names (season lookups use .index)")
 check(all(v >= 0 for v in r["rainfall_mm"]), "all rainfall values >= 0")
 check(abs(sum(r["rainfall_mm"]) - r["annual_mm"]) < 0.5, f"annual_mm {r['annual_mm']} ~= sum {sum(r['rainfall_mm']):.1f} (12 values rounded to 0.1 mm)")
-src_hosts = [urlparse(u).hostname or "" for u in re.findall(r"https://[^\s)]+", r.get("source", ""))]
+try:
+    src_text = r.get("source", "")
+    src_hosts = [urlparse(u).hostname or "" for u in re.findall(r"https://[^\s)]+", src_text if isinstance(src_text, str) else "")]
+except (TypeError, ValueError):
+    src_hosts = []
 check(any(h == "weather.gov" or h.endswith(".weather.gov") for h in src_hosts), "rainfall cites NWS source with URL")
 check(len(r.get("rainfall_in", [])) == 12, "rainfall_in has 12 source values")
 check(abs(sum(r["rainfall_in"]) - r["annual_in"]) < 0.05, "annual_in matches monthly sum")
