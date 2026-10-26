@@ -27,11 +27,11 @@ check(monsoon > sum(r["rainfall_mm"]) * 0.45, f"monsoon Jul-Sep share {monsoon/s
 check(m.get("species") == "Prosopis velutina", "mesquite species set")
 check(m.get("nitrogen_fixer") is True, "mesquite nitrogen_fixer true")
 check("game_stats_proposed" in m, "mesquite has proposed game stats (no tuning.json overwrite)")
-g = m["game_stats_proposed"]
+g = m.get("game_stats_proposed") or {}
 check(g.get("cost_usd") == 40 and g.get("build_manhours") == 2, "mesquite cost/manhours match feat/4 tuning (40 USD, 2 mh)")
 check(g.get("water_need_gal_per_mo") == 250, "mesquite water need matches tuning (250 gal/mo)")
 check(g.get("yield_usd_per_mo") == 12 and g.get("yield_start_month") == 12, "mesquite yield matches tuning ($12/mo from month 12)")
-check("tuning.json" not in (ROOT / "data/mesquite.json").read_text().lower().replace("tuning.json plant schema when it lands", "") or True, "mesquite file is separate from tuning schema")
+check("game_stats_proposed" in m and all(k not in m for k in ("cost_usd", "water_need_gal_per_mo", "yield_usd_per_mo")), "mesquite stats namespaced under game_stats_proposed, separate from tuning schema")
 check(len(m.get("sources", [])) >= 2, "mesquite cites >=2 sources")
 
 info = (ROOT / "docs/sonoran_info.md").read_text().lower()

@@ -1,5 +1,5 @@
 {
-  "_comment": "Velvet mesquite (Prosopis velutina, syn. Neltuma velutina) game stats for the Sonoran content pack. Botany/ecology from: USDA FS FEIS Prosopis velutina (Uchytil 1990, https://www.fs.usda.gov/database/feis/plants/tree/provel/all.html); UA Campus Arboretum taxon page (https://apps.cals.arizona.edu/arboretum/taxon.aspx?id=235); Garden Oracle growing notes (pH 6.6-8.5, full sun, no nitrogen fertilizer). Game cost/benefit numbers are PROPOSED values for the store/tuning schema (see tuning note) - this file does not overwrite any tuning.json; values are chosen to be consistent with the tuning schema proposed in feat/4 (money, manhours, water_L_per_month, soil/wind effects).",
+  "_comment": "Velvet mesquite (Prosopis velutina, syn. Neltuma velutina) game stats for the Sonoran content pack. Botany/ecology from: USDA FS FEIS Prosopis velutina (Uchytil 1990, https://www.fs.usda.gov/database/feis/plants/tree/provel/all.html); UA Campus Arboretum taxon page (https://apps.cals.arizona.edu/arboretum/taxon.aspx?id=235); Garden Oracle growing notes (pH 6.6-8.5, full sun, no nitrogen fertilizer). Game cost/benefit numbers are PROPOSED values for the store/tuning schema (see tuning note) - this file does not overwrite any tuning.json; values are chosen to be consistent with the tuning schema proposed in feat/4 (money, manhours, water_need_gal_per_mo / water_gal_per_mo in gallons, soil/wind effects).",
   "species": "Prosopis velutina",
   "synonym": "Neltuma velutina",
   "common_name": "Velvet mesquite",
@@ -22,7 +22,7 @@
     "Resprouts from underground buds after fire/top-kill; mature trees rarely killed by fire."
   ],
   "game_stats_proposed": {
-    "_tuning_note": "Aligned with feat/4 store tuning schema (data/tuning.json item id 'mesquite', per-tree): cost_usd, build_manhours, upkeep_manhours_per_mo, upkeep_usd_per_mo, water_need_gal_per_mo, yield_usd_per_mo from yield_start_month. Values below MATCH tuning.json so the content pack is consistent with it; extra ecology-driven modifiers are namespaced under 'extensions' and do not alter tuning.json.",
+    "_tuning_note": "Proposed values aligned with the feat/4 store tuning schema (data/tuning.json item id 'mesquite', per-tree): cost_usd, build_manhours, upkeep_manhours_per_mo, upkeep_usd_per_mo, water_need_gal_per_mo, yield_usd_per_mo from yield_start_month. Verify these against data/tuning.json once feat/4 lands; extra ecology-driven modifiers including survival are namespaced under 'extensions' and this file does not alter tuning.json.",
     "cost_usd": 40,
     "build_manhours": 2,
     "remove_manhours": 1,
@@ -36,17 +36,18 @@
       "establishment_water_multiplier": 3.0,
       "soil_health_bonus_pct_per_year": 5,
       "wind_erosion_reduction_pct": 15,
-      "shade_water_saving_pct_nearby": 10
-    },
-    "survival": {
-      "optimal_plant_months": ["Jul", "Aug", "Sep", "Oct", "Feb", "Mar"],
-      "plant_in_foresummer_penalty": "Apr-Jun planting: survival x0.6 unless irrigated at establishment rate",
-      "drought_tolerance": "high once established; seedlings need monsoon/winter rains or irrigation"
+      "shade_water_saving_pct_nearby": 10,
+      "survival": {
+        "optimal_plant_months": ["Jul", "Aug", "Sep", "Oct", "Feb", "Mar"],
+        "plant_in_foresummer_penalty": "Apr-Jun planting: survival x0.6 unless irrigated at establishment rate",
+        "drought_tolerance": "high once established; seedlings need monsoon/winter rains or irrigation"
+      }
     }
   },
   "sources": [
     "USDA Forest Service FEIS - Prosopis velutina (https://www.fs.usda.gov/database/feis/plants/tree/provel/all.html)",
     "UA Campus Arboretum - Prosopis velutina taxon (https://apps.cals.arizona.edu/arboretum/taxon.aspx?id=235)",
+    "Garden Oracle - Velvet mesquite growing notes (pH 6.6-8.5, full sun, no nitrogen fertilizer)",
     "NWS Tucson normals for planting-season rainfall context (https://www.weather.gov/twc/TucsonMonthlyNormalExtremes)"
   ]
 }

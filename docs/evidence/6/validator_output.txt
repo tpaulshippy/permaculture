@@ -13,7 +13,7 @@ PASS: mesquite has proposed game stats (no tuning.json overwrite)
 PASS: mesquite cost/manhours match feat/4 tuning (40 USD, 2 mh)
 PASS: mesquite water need matches tuning (250 gal/mo)
 PASS: mesquite yield matches tuning ($12/mo from month 12)
-PASS: mesquite file is separate from tuning schema
+PASS: mesquite stats namespaced under game_stats_proposed, separate from tuning schema
 PASS: mesquite cites >=2 sources
 PASS: info text covers 'best time to plant'
 PASS: info text covers 'problems'
