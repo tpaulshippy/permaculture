@@ -9,7 +9,7 @@ PASS: rainfall data has 'seasons'
 PASS: rainfall data has 'station'
 PASS: rainfall data values have valid shapes/types/labels
 PASS: rainfall units are mm/month
-PASS: month labels are 12 unique names (season lookups use .index)
+PASS: month labels are the canonical ordered Jan-Dec labels
 PASS: all rainfall values >= 0 in both units
 PASS: annual_mm 269.5 ~= sum 269.3 (12 values rounded to 0.1 mm)
 PASS: rainfall cites NWS source with URL

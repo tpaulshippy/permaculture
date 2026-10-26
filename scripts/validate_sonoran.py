@@ -48,7 +48,7 @@ if any(k not in r for k in ("months", "rainfall_mm", "rainfall_in", "annual_mm",
     sys.exit(1)
 
 check(r.get("units") == "mm/month", "rainfall units are mm/month")
-check(len(set(r["months"])) == 12, "month labels are 12 unique names (season lookups use .index)")
+check(r["months"] == ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], "month labels are the canonical ordered Jan-Dec labels")
 check(all(v >= 0 for v in r["rainfall_mm"]) and all(v >= 0 for v in r["rainfall_in"]), "all rainfall values >= 0 in both units")
 check(abs(sum(r["rainfall_mm"]) - r["annual_mm"]) < 0.5, f"annual_mm {r['annual_mm']} ~= sum {sum(r['rainfall_mm']):.1f} (12 values rounded to 0.1 mm)")
 try:
