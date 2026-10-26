@@ -8,8 +8,10 @@ extends Node3D
 ##   godot --path . -- --capture-mode=terrain --capture-path=/tmp/terrain_topdown.png
 ##   godot --path . -- --capture-mode=hex --capture-path=/tmp/hex_overlay.png
 ##
-## Interactive play: drag to orbit, wheel to zoom, click terrain to place the
-## selected item (keys 1-4 or HUD buttons), N or the HUD button for Next
+## Interactive play (mobile-first): tap terrain to place the selected item
+## (HUD buttons), one finger drag = orbit, two finger pinch = zoom, Next
+## button = advance one month. Desktop keys still work: 1-4 select, N = Next,
+## mouse drag = orbit, wheel = zoom.
 ## (Q13 gating: house + well L1 + mesquite required before Next unlocks).
 ## Scripted demo for screen recordings:
 ##   godot --path . --resolution 1280x720 -- --demo
@@ -94,6 +96,10 @@ var _dist := 0.0
 var _dragging := false
 var _press_pos := Vector2.ZERO
 var _moved := false
+# Active screen touches by index (mobile). emulate_mouse_from_touch is off
+# (see project.godot), so touch is handled natively here; desktop mouse path
+# below is unchanged.
+var _touches := {}
 
 # Demo state.
 var _demo_time := 0.0
@@ -200,7 +206,7 @@ func _build(mode: int) -> void:
 		if _capture_mode == "hex":
 			_place_capture_set()
 		_build_hud()
-		_refresh_hud("Select an item (1-4) and click the terrain.")
+		_refresh_hud("Pick an item below and tap the terrain.")
 	if _demo:
 		_selected = "house"
 		_dist *= 0.8
@@ -417,7 +423,7 @@ func _build_hud() -> void:
 	box.add_theme_constant_override("separation", 6)
 	panel.add_child(box)
 	var title := Label.new()
-	title.text = "Hex overlay (issue #3) — click terrain to place"
+	title.text = "Tap terrain to place (drag = orbit, pinch = zoom)"
 	box.add_child(title)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 4)
@@ -461,7 +467,7 @@ func _build_hud() -> void:
 	_status_label = Label.new()
 	box.add_child(_status_label)
 	_next_button = Button.new()
-	_next_button.text = "Next turn (N)"
+	_next_button.text = "Next turn \u25b8 (N)"
 	_next_button.pressed.connect(_on_next)
 	box.add_child(_next_button)
 
@@ -490,7 +496,7 @@ func _on_item_button(item_id: String) -> void:
 	_selected = item_id
 	for key in _item_buttons:
 		_item_buttons[key].set_pressed_no_signal(key == item_id)
-	_refresh_hud("Selected '%s' — click terrain to place." % item_id)
+	_refresh_hud("Selected '%s' — tap terrain to place." % item_id)
 
 
 func _on_next() -> void:
@@ -600,6 +606,40 @@ func _unhandled_input(event: InputEvent) -> void:
 			_yaw -= event.relative.x * 0.008
 			_pitch = clampf(_pitch + event.relative.y * 0.006, 0.15, 1.35)
 			_apply_orbit()
+	if event is InputEventScreenTouch:
+		# Mobile: tap = place, one-finger drag = orbit, two-finger pinch = zoom.
+		if event.pressed:
+			_touches[event.index] = event.position
+			if _touches.size() == 1:
+				_press_pos = event.position
+				_moved = false
+			else:
+				_moved = true  # second finger cancels the tap
+		else:
+			var was_tap: bool = _touches.size() == 1 and _touches.has(event.index)
+			_touches.erase(event.index)
+			if was_tap and not _moved:
+				_try_place_at(event.position)
+	elif event is InputEventScreenDrag and _touches.has(event.index):
+		if _touches.size() == 1:
+			if (event.position - _press_pos).length() > 12.0:
+				_moved = true
+			if _moved:
+				_yaw -= event.relative.x * 0.008
+				_pitch = clampf(_pitch + event.relative.y * 0.006, 0.15, 1.35)
+				_apply_orbit()
+		elif _touches.size() == 2:
+			var other_pos := Vector2.ZERO
+			for k in _touches:
+				if k != event.index:
+					other_pos = _touches[k]
+			var old_dist: float = _touches[event.index].distance_to(other_pos)
+			var new_dist: float = event.position.distance_to(other_pos)
+			if old_dist > 0.0 and new_dist > 0.0:
+				_dist = clampf(_dist * old_dist / new_dist, 12.0, 120.0)
+				_apply_orbit()
+			_moved = true
+		_touches[event.index] = event.position
 
 
 func _apply_orbit() -> void:

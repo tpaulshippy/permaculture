@@ -1,6 +1,6 @@
 # Permaculture
 
-A 3D desert-garden strategy game in **Godot 4**. You shape a 2-acre Sonoran plot where **water flows downhill** — place a house, a well, and plants, then advance month by month, balancing water, money, and labor against the desert's rainfall year.
+A 3D desert-garden strategy game for **mobile** (Android + iOS) built in **Godot 4**. You shape a 2-acre Sonoran plot where **water flows downhill** — place a house, a well, and plants, then advance month by month, balancing water, money, and labor against the desert's rainfall year.
 
 > MVP status: single Sonoran garden, local play. Accounts, win/lose screens, and extra biomes are future work (see issue #1).
 
@@ -22,12 +22,13 @@ Same terrain, tighter shot: the camera orbits while house, well L1, ditch-berm, 
 
 ## How to play
 
-1. **Run it:** `godot --path .` (Godot 4.x). Scripted demo: `godot --path . -- --demo`.
-2. **Pick a tool:** keys **1–4** (or HUD buttons) — `1` house, `2` well L1, `3` ditch-berm, `4` mesquite.
-3. **Place it:** left-**click** the terrain. House likes dry/gentle ground, wells want moist low spots, ditches belong mid-slope off the flow channel, mesquite goes anywhere free. **Drag** to orbit, **wheel** to zoom.
-4. **Unlock Next:** you must place a **house + well + one plant** before the **Next** button (or **N** key) enables.
-5. **Take turns:** each Next press = one month. The house pays 160 manhours/mo (minus upkeep), the well pumps 2500 gal/mo from the groundwater stock, ditches capture +12% of that month's rainfall back into the table, mesquite drinks 250 gal/mo and pays $12/mo from month 12. Rainfall follows the real Tucson typical year (monsoon Jul–Sep, dry Apr–Jun); wind is display-only.
-6. **Read the bars:** money / water-table % / manhours update every month, plus a monthly summary line. Red banners (dry well, empty table, negative money) warn but don't stop you — tune your build until the garden holds water through the dry months.
+This is a **mobile game** — install the Android APK or iOS build and play with your thumbs. (Desktop runs too: mouse + keys `1–4`, `N`, wheel-zoom.)
+
+1. **Pick a tool:** tap a HUD button — house, well L1, ditch-berm, mesquite.
+2. **Place it:** **tap** the terrain. House likes dry/gentle ground, wells want moist low spots, ditches belong mid-slope off the flow channel, mesquite goes anywhere free. **Drag** with one finger to orbit, **pinch** to zoom.
+3. **Unlock Next:** you must place a **house + well + one plant** before the **Next turn ▸** button enables.
+4. **Take turns:** each Next tap = one month. The house pays 160 manhours/mo (minus upkeep), the well pumps 2500 gal/mo from the groundwater stock, ditches capture +12% of that month's rainfall back into the table, mesquite drinks 250 gal/mo and pays $12/mo from month 12. Rainfall follows the real Tucson typical year (monsoon Jul–Sep, dry Apr–Jun); wind is display-only.
+5. **Read the bars:** money / water-table % / manhours update every month, plus a monthly summary line. Red banners (dry well, empty table, negative money) warn but don't stop you — tune your build until the garden holds water through the dry months.
 
 ## Repo map
 

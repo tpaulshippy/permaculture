@@ -19,6 +19,13 @@ window/size/viewport_height=720
 ; either landscape rotation. Shared setting, no per-platform fork.
 window/handheld/orientation=4
 
+[input_devices]
+
+pointing/emulate_mouse_from_touch=false
+; Touch is handled natively in scripts/main.gd (tap = place, one-finger drag
+; = orbit, two-finger pinch = zoom). Emulation stays off so a tap cannot
+; double-fire as both a touch and a mouse click. Desktop mouse path unchanged.
+
 [rendering]
 
 renderer/rendering_method="forward_plus"
