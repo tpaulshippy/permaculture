@@ -1,0 +1,49 @@
+{
+  "_comment": "Velvet mesquite (Prosopis velutina, syn. Neltuma velutina) game stats for the Sonoran content pack. Botany/ecology from: USDA FS FEIS Prosopis velutina (Uchytil 1990, https://www.fs.usda.gov/database/feis/plants/tree/provel/all.html); UA Campus Arboretum taxon page (https://apps.cals.arizona.edu/arboretum/taxon.aspx?id=235); Garden Oracle growing notes (pH 6.6-8.5, full sun, no nitrogen fertilizer). Game cost/benefit numbers are PROPOSED values for the store/tuning schema (see tuning note) - this file does not overwrite any tuning.json; values are chosen to be consistent with the tuning schema proposed in feat/4 (money, manhours, water_L_per_month, soil/wind effects).",
+  "species": "Prosopis velutina",
+  "synonym": "Neltuma velutina",
+  "common_name": "Velvet mesquite",
+  "native_biomes": ["sonoran"],
+  "life_form": "tree",
+  "mature_height_m": 9,
+  "mature_canopy_m": 9,
+  "growth_cm_per_year": 60,
+  "taproot_m": "up to 15+",
+  "drought_tolerant": true,
+  "nitrogen_fixer": true,
+  "sun": "full sun",
+  "soil": "well-draining, pH 6.6-8.5; no nitrogen fertilizer needed",
+  "establishment": "Propagated by seed; needs deep supplemental watering in first 1-2 summers, then minimal once established (taproot reaches groundwater).",
+  "yields": ["edible pods (mesquite flour)", "shade / microclimate cooling", "firewood", "wildlife forage", "nurse-tree fertility island"],
+  "ecology": [
+    "Legume nitrogen fixer: enriches soil via root bacteria, benefits surrounding plants.",
+    "Deep taproot accesses groundwater; 'fertility island' under canopy lifts soil organic matter.",
+    "Bosque dominant along washes; scattered individuals on bajadas/desert grassland.",
+    "Resprouts from underground buds after fire/top-kill; mature trees rarely killed by fire."
+  ],
+  "game_stats_proposed": {
+    "_tuning_note": "Proposed store values; map onto tuning.json plant schema when it lands (feat/4). Units mirror issue #1 store fields: upfront money + manhours, monthly upkeep, monthly water need, ongoing benefits.",
+    "plant_cost_money": 25,
+    "plant_manhours": 4,
+    "remove_manhours": 6,
+    "monthly_upkeep_manhours": 0.25,
+    "monthly_water_need_mm": 10,
+    "establishment_months": 18,
+    "establishment_water_multiplier": 3.0,
+    "soil_health_bonus_pct_per_year": 5,
+    "wind_erosion_reduction_pct": 15,
+    "shade_water_saving_pct_nearby": 10,
+    "pod_yield_kg_per_year_mature": 10,
+    "pod_income_per_year_mature": 20,
+    "survival": {
+      "optimal_plant_months": ["Jul", "Aug", "Sep", "Oct", "Feb", "Mar"],
+      "plant_in_foresummer_penalty": "Apr-Jun planting: survival x0.6 unless irrigated at establishment rate",
+      "drought_tolerance": "high once established; seedlings need monsoon/winter rains or irrigation"
+    }
+  },
+  "sources": [
+    "USDA Forest Service FEIS - Prosopis velutina (https://www.fs.usda.gov/database/feis/plants/tree/provel/all.html)",
+    "UA Campus Arboretum - Prosopis velutina taxon (https://apps.cals.arizona.edu/arboretum/taxon.aspx?id=235)",
+    "NWS Tucson normals for planting-season rainfall context (https://www.weather.gov/twc/TucsonMonthlyNormalExtremes)"
+  ]
+}

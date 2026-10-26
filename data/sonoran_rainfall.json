@@ -1,0 +1,17 @@
+{
+  "_comment": "Sonoran Desert typical-year rainfall, 12 monthly mm values. Source: NWS Tucson AZ, 'Tucson Monthly and Daily Normals and Records', 1991-2020 normals for TUCSON, ARIZONA (station Tucson Intl Airport area). Page: https://www.weather.gov/twc/TucsonMonthlyNormalExtremes (accessed 2026-10-25). Original units inches converted to mm (x25.4), rounded to 1 decimal. Bimodal pattern: winter frontal rains (Dec-Feb) + North American monsoon peak (Jul-Sep); foresummer drought (Apr-Jun). Representative of the Arizona Upland / Tucson-basin Sonoran typical year used by the game (D8 weather driver).",
+  "biome": "sonoran",
+  "station": "Tucson, Arizona (NWS TWC, 1991-2020 climate normals)",
+  "units": "mm/month",
+  "months": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+  "rainfall_in": [0.84, 0.84, 0.56, 0.24, 0.20, 0.23, 2.21, 1.98, 1.32, 0.67, 0.56, 0.96],
+  "rainfall_mm": [21.3, 21.3, 14.2, 6.1, 5.1, 5.8, 56.1, 50.3, 33.5, 17.0, 14.2, 24.4],
+  "annual_in": 10.61,
+  "annual_mm": 269.5,
+  "source": "NWS Tucson, 1991-2020 normals (https://www.weather.gov/twc/TucsonMonthlyNormalExtremes); cross-check NOAA U.S. Climate Normals (https://www.ncei.noaa.gov/access/us-climate-normals/)",
+  "notes": [
+    "Bimodal desert rainfall: gentle winter rains Dec-Mar and intense summer monsoon Jul-Sep.",
+    "Apr-Jun is the foresummer drought: hottest/driest, highest irrigation need.",
+    "Game use: typical-year driver for weather/irrigation/water-table logic; randomized events vary around these means."
+  ]
+}
