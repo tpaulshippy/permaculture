@@ -1,0 +1,16 @@
+.gitignore
+  h_6bbd00fe0a456a 3
+docs/ios.md
+  h_6bbd00fe0a456a 53-55,59,65-68
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "dd029d19e8d9060515eeba523fc80bacd092ec42",
+  "prompts": {},
+  "humans": {
+    "h_6bbd00fe0a456a": {
+      "author": "Paul Shippy <pshippy@gmail.com>"
+    }
+  }
+}
