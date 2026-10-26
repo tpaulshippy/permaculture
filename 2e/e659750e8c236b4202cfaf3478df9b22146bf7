@@ -1,0 +1,26 @@
+docs/evidence/5/README.md
+  h_6bbd00fe0a456a 1-58
+docs/evidence/5/demo_console.log
+  h_6bbd00fe0a456a 1-14
+docs/evidence/5/headless_test_hud.log
+  h_6bbd00fe0a456a 1-41
+docs/evidence/5/plan.md
+  h_6bbd00fe0a456a 1-21
+scripts/main.gd
+  h_6bbd00fe0a456a 20,33-35,38-45,70,77-87,149-152,397-405,435-460,469-488,498-505,517-541,562,617-626,643-646,692,704-727
+scripts/turn_sim.gd
+  h_6bbd00fe0a456a 1-290
+tests/test_hud.gd
+  h_6bbd00fe0a456a 1-128
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2ee659750e8c236b4202cfaf3478df9b22146bf7",
+  "prompts": {},
+  "humans": {
+    "h_6bbd00fe0a456a": {
+      "author": "Paul Shippy <pshippy@gmail.com>"
+    }
+  }
+}
