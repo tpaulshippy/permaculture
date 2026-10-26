@@ -20,7 +20,7 @@ comments-only and MUST NOT be added as a `.gd` file in this change).
 | `month_index` | Turns elapsed (0-based). Autosave increments on every **Next** press. Calendar month = `month_index % 12`. |
 | `resources` | `{ money (>=0), water_table (0..100), manhours (>=0) }`. |
 | `hexes` | Sparse axial `(q, r)` overrides: `structure_id`, `plant_id`, `growth_stage` 0..5, `condition` (healthy/stressed/dead). Empty terrain is regenerated from `seed`; only placed/mutated hexes need entries. No duplicate `(q, r)` — loaders MUST reject duplicates (JSON Schema cannot express this; `tools/validate_save.py` enforces it). |
-| `saved_at` | Optional informational timestamp in ISO-8601 (`YYYY-MM-DDTHH:MM:SS[Z or ±HH:MM]`), enforced by schema pattern + manual validator. Never used for logic. |
+| `saved_at` | Optional informational timestamp in ISO-8601 (`YYYY-MM-DDTHH:MM:SS[.fraction][Z or ±HH:MM]`), enforced by schema pattern + manual validator. Never used for logic. |
 
 ## Behavior
 
@@ -33,7 +33,10 @@ comments-only and MUST NOT be added as a `.gd` file in this change).
   violation, or unknown `version` → **discard, log a warning, start a fresh
   seed. Never crash, never half-load.** The corrupt file is left in place
   (never deleted or renamed to `.bak` in v1); the next successful autosave
-  overwrites it. `tools/validate_save.py` includes a
+  overwrites it. An **unknown `biome_id`** (e.g. a save from a content pack
+  that is no longer installed) passes schema validation but MUST follow this
+  same corrupt-file path: discard, log a warning, start a fresh seed.
+  `tools/validate_save.py` includes a
   self-test proving a garbage payload is rejected.
 - **Versioning:** bump `version` on breaking changes; loader keeps only a
   `const SAVE_VERSION := 1` check (strict equality) for v1. Future versions MAY

@@ -28,6 +28,17 @@ MAX_SEED = 2**53 - 1  # largest int exactly representable in double-based JSON p
 
 CONDITIONS = {"healthy", "stressed", "dead", None}
 
+
+def is_finite_number(x: object) -> bool:
+    """True for JSON numbers that are exactly representable: ints (never
+    bool) or finite floats. `math.isfinite` is only ever called on floats so
+    arbitrarily large ints short-circuit safely."""
+    if isinstance(x, bool):
+        return False
+    if isinstance(x, int):
+        return True
+    return isinstance(x, float) and math.isfinite(x)
+
 # ISO-8601 UTC/offset datetime, e.g. 2026-10-25T00:00:00Z or +00:00 with optional fraction.
 SAVED_AT_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$")
 
@@ -73,13 +84,13 @@ def check(save: dict, errors: list[str]) -> int:
             if f not in res:
                 fail(f"resources missing required field: {f}", errors)
         m = res.get("money")
-        if "money" in res and not (isinstance(m, (int, float)) and not isinstance(m, bool) and m >= 0 and math.isfinite(m)):
+        if "money" in res and not (is_finite_number(m) and m >= 0):
             fail(f"resources.money must be a finite number >= 0, got {m!r}", errors)
         w = res.get("water_table")
-        if "water_table" in res and not (isinstance(w, (int, float)) and not isinstance(w, bool) and 0 <= w <= 100 and math.isfinite(w)):
+        if "water_table" in res and not (is_finite_number(w) and 0 <= w <= 100):
             fail(f"resources.water_table must be a finite number in 0..100, got {w!r}", errors)
         h = res.get("manhours")
-        if "manhours" in res and not (isinstance(h, (int, float)) and not isinstance(h, bool) and h >= 0 and math.isfinite(h)):
+        if "manhours" in res and not (is_finite_number(h) and h >= 0):
             fail(f"resources.manhours must be a finite number >= 0, got {h!r}", errors)
         for k in res:
             if k not in ("money", "water_table", "manhours"):
