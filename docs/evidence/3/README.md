@@ -21,7 +21,7 @@ All artifacts here are generated from actual Godot 4.7.2 runs, not mockups.
 ```sh
 # Headless logic tests (no GPU needed)
 godot --headless --path . --script res://tests/test_terrain.gd  # issue #2, unchanged
-godot --headless --path . --script res://tests/test_hex.gd      # issue #3, 49 checks
+godot --headless --path . --script res://tests/test_hex.gd      # issue #3, 55 checks
 
 # Still captures (offscreen SubViewport; main window never needs to be visible)
 godot --path . --quit-after 120 -- --capture-mode=hex --capture-path=docs/evidence/3/hex_overlay.png

@@ -51,6 +51,7 @@ var _demo := false
 var _record_dir := ""
 var _record_index := 0
 var _record_accum := 0.0
+var _record_failed := false
 var _frames := 0
 var _capture_failed := false
 var _offscreen: SubViewport
@@ -158,15 +159,21 @@ func _build(mode: int) -> void:
 	body.add_child(col)
 	add_child(body)
 	# Hex overlay visuals: grid lines, hint ghosts, placed-item markers.
-	_overlay = Node3D.new()
-	_overlay.name = "HexOverlay"
-	add_child(_overlay)
-	_build_grid_lines()
-	_build_hints()
-	if _capture_mode == "hex":
-		_place_capture_set()
-	_build_hud()
-	_refresh_hud("Select an item (1-4) and click the terrain.")
+	# Hex overlay visuals stay out of the issue #2 captures: grid lines,
+	# hint ghosts, capture-set markers, and the HUD are built only for
+	# interactive play, the demo, or explicit hex captures, so the legacy
+	# terrain/moisture captures keep their original framing.
+	var show_overlay := _capture_path == "" or _capture_mode == "hex" or _demo
+	if show_overlay:
+		_overlay = Node3D.new()
+		_overlay.name = "HexOverlay"
+		add_child(_overlay)
+		_build_grid_lines()
+		_build_hints()
+		if _capture_mode == "hex":
+			_place_capture_set()
+		_build_hud()
+		_refresh_hud("Select an item (1-4) and click the terrain.")
 	if _demo:
 		_selected = "house"
 		_dist *= 0.8
@@ -497,10 +504,14 @@ func _process(delta: float) -> void:
 				_record_accum -= 1.0 / DEMO_RECORD_FPS
 				_record_index += 1
 				var img := get_viewport().get_texture().get_image()
-				img.save_png("%s/frame_%04d.png" % [_record_dir, _record_index])
+				var ferr := img.save_png("%s/frame_%04d.png" % [_record_dir, _record_index])
+				if ferr != OK:
+					_record_failed = true
+					push_error("Frame save failed: %s/frame_%04d.png (err %d)"
+						% [_record_dir, _record_index, ferr])
 		if _demo_time >= DEMO_QUIT_AFTER or _record_index >= DEMO_RECORD_MAX_FRAMES:
 			print("Demo finished: ", _hex.gate_label(), " frames=", _record_index)
-			get_tree().quit(0)
+			get_tree().quit(1 if _record_failed else 0)
 			return
 	if _capture_path == "" or _offscreen == null:
 		return
@@ -520,18 +531,33 @@ func _demo_place(item_id: String) -> void:
 	_selected = item_id
 	for key in _item_buttons:
 		_item_buttons[key].set_pressed_no_signal(key == item_id)
+	# Marker names embed the item id, which itself may contain underscores
+	# (well_l1, ditch_berm), so hex coordinates are the final two name
+	# components, not components 2 and 3.
 	var used := {}
 	for other in _overlay.get_children():
-		if other.name.begins_with("Marker_"):
-			var parts := other.name.split("_")
-			used[Vector2i(int(parts[2]), int(parts[3]))] = true
+		if String(other.name).begins_with("Marker_"):
+			var parts := String(other.name).split("_")
+			used[Vector2i(int(parts[parts.size() - 2]), int(parts[parts.size() - 1]))] = true
 	var hex := _nearest_placeable(item_id, used)
 	if hex == Vector2i(-1, -1):
 		_refresh_hud("Demo: no valid cell for '%s'." % item_id)
 		return
-	_hex.place(hex, item_id)
-	_spawn_marker(hex, item_id)
-	print("Demo: placed '%s' at %s | %s" % [item_id, hex, _hex.gate_label()])
+	# Exercise the real click path: project the target hex to screen and
+	# place through the raycast validator. Falls back to a direct grid
+	# placement if the hex is behind the camera.
+	var via := "direct"
+	var target: Vector3 = _hex.hex_to_world(hex)
+	target.y = _water.get_height_at(hex) + 0.1
+	if not _cam.is_position_behind(target):
+		_try_place_at(_cam.unproject_position(target))
+		if _overlay.has_node("Marker_%s_%d_%d" % [item_id, hex.x, hex.y]):
+			via = "raycast"
+	if via == "direct":
+		push_warning("Demo: raycast missed %s, placing directly." % hex)
+		_hex.place(hex, item_id)
+		_spawn_marker(hex, item_id)
+	print("Demo: placed '%s' at %s via %s | %s" % [item_id, hex, via, _hex.gate_label()])
 	_refresh_hud("Demo placed '%s' at %s." % [item_id, hex])
 
 

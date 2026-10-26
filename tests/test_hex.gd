@@ -155,6 +155,21 @@ func _init() -> void:
 				break
 	_check(steep_hex == Vector2i(-1, -1) or not bool(grid.can_place(steep_hex, "house").get("ok")),
 		"house rejected on steep ground (or terrain has no steep cells)")
+	# Ditch-berm is mid-slope, off-channel: flat ground and wash-core cells
+	# both reject it.
+	var flat_hex := Vector2i(-1, -1)
+	for r in range(HexScript.HEX_H):
+		for c in range(HexScript.HEX_W):
+			var hex := Vector2i(c, r)
+			if grid.get_slope(hex) < HexScript.DITCH_MIN_SLOPE:
+				flat_hex = hex
+				break
+	_check(flat_hex != Vector2i(-1, -1), "terrain has flat ground for the ditch rule")
+	if flat_hex != Vector2i(-1, -1):
+		_check(not bool(grid.can_place(flat_hex, "ditch_berm").get("ok")),
+			"ditch rejected on flat ground")
+	_check(not bool(grid.can_place(wash_hex, "ditch_berm").get("ok")),
+		"ditch rejected in the wash core")
 	_check(not bool(grid.can_place(Vector2i(0, 0), "greenhouse").get("ok")),
 		"unknown item rejected")
 	_check(not bool(grid.can_place(Vector2i(-1, 0), "house").get("ok")),
@@ -220,12 +235,32 @@ func _init() -> void:
 	# Snapshot shape matches data/save_schema.json hex entries.
 	var snap: Array = gate.snapshot()
 	_check(snap.size() == 4, "snapshot holds exactly the 4 placed hexes")
-	var snap_ok := true
+	var by_coord := {}
 	for e in snap:
-		if not ("q" in e and "r" in e and "structure_id" in e and "plant_id" in e
-				and "growth_stage" in e and "condition" in e):
+		by_coord[Vector2i(int(e["q"]), int(e["r"]))] = e
+	_check(by_coord.size() == 4, "snapshot coordinates are unique")
+	var expect := {
+		g_house: {"structure_id": "house", "plant_id": null},
+		g_well: {"structure_id": "well_l1", "plant_id": null},
+		g_ditch: {"structure_id": "ditch_berm", "plant_id": null},
+		g_tree: {"structure_id": null, "plant_id": "mesquite"},
+	}
+	var snap_ok := true
+	for hex in expect:
+		if not by_coord.has(hex):
 			snap_ok = false
-	_check(snap_ok, "snapshot entries carry save-schema fields")
+			continue
+		var e: Dictionary = by_coord[hex]
+		var want: Dictionary = expect[hex]
+		if e["structure_id"] != want["structure_id"] or e["plant_id"] != want["plant_id"]:
+			snap_ok = false
+		if e["plant_id"] != null:
+			if int(e["growth_stage"]) != 0 or String(e["condition"]) != "healthy":
+				snap_ok = false
+		else:
+			if e["growth_stage"] != null or e["condition"] != null:
+				snap_ok = false
+	_check(snap_ok, "snapshot entries carry exact ids, save-schema nulls, and plant defaults")
 
 	if _failures == 0:
 		print("ALL TESTS PASSED")

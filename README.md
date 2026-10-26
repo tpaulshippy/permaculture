@@ -10,7 +10,7 @@ per-hex moisture API (`TerrainWater.get_moisture_at()`).
 - `scripts/terrain_config.gd` — tuning constants (grid, seed, landform, water)
 - `scripts/terrain_water.gd` — deterministic heightfield + D8 + moisture (no UI dependency)
 - `scripts/terrain_mesh.gd` — ArrayMesh builder, TERRAIN / MOISTURE render modes
-- `scripts/future_stubs.gd` — stubs for hex overlay gameplay, store, HUD, save, export presets (owned by other issues)
+- `scripts/future_stubs.gd` — stubs for store, save, export presets (owned by other issues)
 - `tests/test_terrain.gd` — headless test, 34 checks, exit code 0 on pass (1 on failure)
 
 ```sh
@@ -31,7 +31,7 @@ locks Next until satisfied. 4 native mesquite hint ghosts pre-placed.
   Q13 gating, save-shaped snapshot (no UI dependency)
 - `scripts/main.gd` — orbit camera, click-to-place raycast, HUD + Next
   button, scripted `--demo` / `--demo-record` for evidence video
-- `tests/test_hex.gd` — headless test, 49 checks, exit code 0 on pass (1 on failure)
+- `tests/test_hex.gd` — headless test, 55 checks, exit code 0 on pass (1 on failure)
 
 ```sh
 godot --headless --path . --script res://tests/test_hex.gd

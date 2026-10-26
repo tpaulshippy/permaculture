@@ -43,7 +43,9 @@ const GATE_NEED := [ITEM_HOUSE, ITEM_WELL, ITEM_MESQUITE]
 #   wash core (flood risk). Flat, dry-ish ground.
 const HOUSE_MAX_SLOPE := 0.9
 const HOUSE_MAX_MOISTURE := 0.75
-# - well L1: must be close to groundwater, i.e. moist ground near the wash.
+# - well L1: must be on moist ground. D8 moisture is the groundwater/wash
+#   proxy (the carved wash band tests wetter than average), so moist cells
+#   are where a well can reach water.
 const WELL_MIN_MOISTURE := 0.45
 # - ditch/berm: contour earthwork needs some slope to catch runoff but must
 #   not sit in the channel itself (washout risk).
@@ -90,6 +92,16 @@ func in_bounds_hex(c: int, r: int) -> bool:
 ## Bind to a generated TerrainWater and sample per-hex state from the mesh.
 ## Mismatched grid sizes are rejected (overlay stays not-ready).
 func setup(water) -> bool:
+	_ready = false
+	_water = null
+	_avg_height.resize(0)
+	_moisture.resize(0)
+	_slope.resize(0)
+	_structure.resize(0)
+	_plant.resize(0)
+	_growth.resize(0)
+	_condition.resize(0)
+	_hint.resize(0)
 	if water == null or water.heights.is_empty():
 		push_error("HexGrid.setup: terrain water model is null or ungenerated.")
 		return false
@@ -193,31 +205,33 @@ func _place_hints() -> void:
 
 
 func get_avg_height(hex: Vector2i) -> float:
-	if not in_bounds_hex(hex.x, hex.y):
+	if not _ready or not in_bounds_hex(hex.x, hex.y):
 		return 0.0
 	return _avg_height[_hidx(hex.x, hex.y)]
 
 
 func get_moisture(hex: Vector2i) -> float:
-	if not in_bounds_hex(hex.x, hex.y):
+	if not _ready or not in_bounds_hex(hex.x, hex.y):
 		return 0.0
 	return _moisture[_hidx(hex.x, hex.y)]
 
 
 func get_slope(hex: Vector2i) -> float:
-	if not in_bounds_hex(hex.x, hex.y):
+	if not _ready or not in_bounds_hex(hex.x, hex.y):
 		return 0.0
 	return _slope[_hidx(hex.x, hex.y)]
 
 
 func is_hint(hex: Vector2i) -> bool:
-	if not in_bounds_hex(hex.x, hex.y):
+	if not _ready or not in_bounds_hex(hex.x, hex.y):
 		return false
 	return _hint[_hidx(hex.x, hex.y)] == 1
 
 
 func hint_hexes() -> Array[Vector2i]:
 	var out: Array[Vector2i] = []
+	if not _ready:
+		return out
 	for r in range(HEX_H):
 		for c in range(HEX_W):
 			if _hint[_hidx(c, r)] == 1:
@@ -226,13 +240,13 @@ func hint_hexes() -> Array[Vector2i]:
 
 
 func structure_at(hex: Vector2i) -> String:
-	if not in_bounds_hex(hex.x, hex.y):
+	if not _ready or not in_bounds_hex(hex.x, hex.y):
 		return ""
 	return _structure[_hidx(hex.x, hex.y)]
 
 
 func plant_at(hex: Vector2i) -> String:
-	if not in_bounds_hex(hex.x, hex.y):
+	if not _ready or not in_bounds_hex(hex.x, hex.y):
 		return ""
 	return _plant[_hidx(hex.x, hex.y)]
 
@@ -388,6 +402,8 @@ func world_to_hex(pos: Vector3) -> Vector2i:
 ## condition). Hints are gameplay ghosts and are not persisted.
 func snapshot() -> Array:
 	var out := []
+	if not _ready:
+		return out
 	for r in range(HEX_H):
 		for c in range(HEX_W):
 			var i := _hidx(c, r)
