@@ -248,9 +248,11 @@ func advance_month() -> Dictionary:
 	}
 
 
-## Live capacity gap: demand above installed pump capacity, from current
-## counts. Placement updates it immediately (a new well clears it); the
-## table stock and last-month realized shortfall are monthly results.
+## Live capacity gap: demand not covered by min(pump capacity, table stock),
+## from current counts. Placing a well clears it immediately (like money/mh)
+## while there is water to pump; when the table is the limiter the gap stays
+## until recharge. The monthly report separately carries the realized
+## last-month shortfall.
 func capacity_shortfall() -> float:
 	var cap := 0.0
 	var dem := 0.0
@@ -258,7 +260,7 @@ func capacity_shortfall() -> float:
 		cap = _num(_items["well_l1"], "pump_gal_per_mo") * wells
 	if _items.has("mesquite"):
 		dem = _num(_items["mesquite"], "water_need_gal_per_mo") * mesquite
-	return maxf(dem - cap, 0.0)
+	return maxf(dem - minf(cap, water_gal), 0.0)
 
 
 ## Red-banner text, or "" when all clear. Advisory only (Q14: no game over).
