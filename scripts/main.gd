@@ -17,6 +17,7 @@ extends Node3D
 const WaterScript := preload("res://scripts/terrain_water.gd")
 const MeshScript := preload("res://scripts/terrain_mesh.gd")
 const HexScript := preload("res://scripts/hex_grid.gd")
+const SimScript := preload("res://scripts/turn_sim.gd")
 const Cfg := preload("res://scripts/terrain_config.gd")
 
 const CAPTURE_AFTER_FRAMES := 30
@@ -29,12 +30,19 @@ const SELECT_KEYS := {
 	KEY_4: "mesquite",
 }
 
-# Scripted demo timeline (seconds): orbit + place house/well/ditch/plant.
+# Scripted demo timeline (seconds): orbit + place house/well/ditch/plant
+# (Q13 gate unlocks), Next (bars update), spam 24 mesquite, then 3x Next to
+# outrun supply and trip the water-table warning (Q14, no game over).
 const DEMO_EVENTS := [
 	{"t": 2.0, "item": "house"},
-	{"t": 5.0, "item": "well_l1"},
-	{"t": 8.0, "item": "ditch_berm"},
-	{"t": 11.0, "item": "mesquite"},
+	{"t": 4.5, "item": "well_l1"},
+	{"t": 7.0, "item": "ditch_berm"},
+	{"t": 9.5, "item": "mesquite"},
+	{"t": 12.0, "next": true},
+	{"t": 14.0, "spam": 24},
+	{"t": 16.0, "next": true},
+	{"t": 18.5, "next": true},
+	{"t": 21.0, "next": true},
 ]
 const DEMO_QUIT_AFTER := 26.0
 const DEMO_ORBIT_SPEED := deg_to_rad(14.0)
@@ -59,12 +67,24 @@ var _offscreen: SubViewport
 
 var _water = null
 var _hex = null
+var _sim = null
 var _cam: Camera3D
 var _overlay: Node3D
 var _selected := "house"
 var _status_label: Label
 var _gate_label: Label
 var _next_button: Button
+# Issue #5 resource HUD: live bars + month/rain/wind + red warning banner.
+var _month_label: Label
+var _rain_label: Label
+var _wind_label: Label
+var _warn_label: Label
+var _money_bar: ProgressBar
+var _water_bar: ProgressBar
+var _mh_bar: ProgressBar
+var _money_label: Label
+var _water_label: Label
+var _mh_label: Label
 var _item_buttons := {}
 
 # Orbit state.
@@ -126,6 +146,9 @@ func _build(mode: int) -> void:
 	_hex = HexScript.new()
 	if not _hex.setup(_water):
 		push_error("Hex overlay setup failed.")
+	_sim = SimScript.new()
+	if not _sim.setup():
+		push_error("Turn sim setup failed (tuning/rainfall packs).")
 	var mesh: ArrayMesh = MeshScript.build_array_mesh(_water, mode)
 	var framing := _framing()
 	# On-screen scene (interactive viewing).
@@ -370,6 +393,15 @@ func _place_capture_set() -> void:
 		if hex != Vector2i(-1, -1) and bool(_hex.place(hex, item).get("ok")):
 			used[hex] = true
 			_spawn_marker(hex, item)
+			_charge(item)
+
+
+## Deduct one-time build costs for a validated placement (issue #5). The
+## hex validator owns legality; the sim only tracks the bill. Balances may
+## go negative -> red banner (Q14), never a placement block.
+func _charge(item_id: String) -> void:
+	if _sim != null and _sim.is_ready():
+		_sim.charge_place(item_id)
 
 
 func _build_hud() -> void:
@@ -399,12 +431,56 @@ func _build_hud() -> void:
 	_item_buttons[_selected].button_pressed = true
 	_gate_label = Label.new()
 	box.add_child(_gate_label)
+	# Issue #5 resource HUD: month wizard readout + live bars. Wind is
+	# display-only (Q12); the red banner is advisory, never a game over (Q14).
+	var res_title := Label.new()
+	res_title.text = "Resources (issue #5)"
+	box.add_child(res_title)
+	_month_label = Label.new()
+	box.add_child(_month_label)
+	_rain_label = Label.new()
+	box.add_child(_rain_label)
+	_wind_label = Label.new()
+	box.add_child(_wind_label)
+	_money_label = Label.new()
+	box.add_child(_money_label)
+	_money_bar = _make_bar(box, 10000.0)
+	_water_label = Label.new()
+	box.add_child(_water_label)
+	_water_bar = _make_bar(box, 100.0)
+	_mh_label = Label.new()
+	box.add_child(_mh_label)
+	_mh_bar = _make_bar(box, 200.0)
+	_warn_label = Label.new()
+	_warn_label.add_theme_color_override("font_color", Color(1.0, 0.15, 0.1))
+	_warn_label.visible = false
+	box.add_child(_warn_label)
 	_status_label = Label.new()
 	box.add_child(_status_label)
 	_next_button = Button.new()
 	_next_button.text = "Next turn (N)"
 	_next_button.pressed.connect(_on_next)
 	box.add_child(_next_button)
+
+
+## Minimal public hooks for issue #5 (HUD-only; no tuning/hex/save changes).
+func hud_month_index() -> int:
+	return _sim.month_index if _sim != null else 0
+
+
+func hud_warning() -> String:
+	return _sim.warning_text() if _sim != null and _sim.is_ready() else ""
+
+
+func _make_bar(box: VBoxContainer, max_value: float) -> ProgressBar:
+	var bar := ProgressBar.new()
+	bar.min_value = 0.0
+	bar.max_value = max_value
+	bar.value = max_value
+	bar.show_percentage = false
+	bar.custom_minimum_size = Vector2(220, 14)
+	box.add_child(bar)
+	return bar
 
 
 func _on_item_button(item_id: String) -> void:
@@ -416,7 +492,14 @@ func _on_item_button(item_id: String) -> void:
 
 func _on_next() -> void:
 	if _hex.can_advance():
-		_refresh_hud("Advancing a month (month sim owned by other issues).")
+		var report: Dictionary = _sim.advance_month() if _sim != null else {}
+		if bool(report.get("ok", false)):
+			_refresh_hud("Month %s: rain %.1f mm, upkeep $%.0f, pump +%.0f / use -%.0f gal." % [
+				String(report.get("month", "?")), float(report.get("rain_mm", 0.0)),
+				float(report.get("upkeep_usd", 0.0)), float(report.get("pump_gal", 0.0)),
+				float(report.get("demand_gal", 0.0))])
+		else:
+			_refresh_hud("Advancing a month (month sim owned by other issues).")
 	else:
 		_refresh_hud("Next is locked: " + _hex.gate_label())
 
@@ -428,6 +511,31 @@ func _refresh_hud(msg: String) -> void:
 		_gate_label.text = _hex.gate_label()
 	if _next_button != null:
 		_next_button.disabled = not _hex.can_advance()
+	_refresh_resources()
+
+
+## Push sim state into bars + labels + the red Q14 banner. No-op until the
+## HUD exists (terrain/moisture captures build no HUD).
+func _refresh_resources() -> void:
+	if _sim == null or not _sim.is_ready():
+		return
+	if _month_label == null:
+		return
+	_month_label.text = _sim.month_label()
+	_rain_label.text = _sim.rain_label()
+	_wind_label.text = _sim.wind_label()
+	var start_money: float = _sim.start_money()
+	_money_bar.max_value = start_money
+	_money_bar.value = clampf(_sim.money, 0.0, start_money)
+	_money_label.text = "Money $%.0f" % _sim.money
+	_water_bar.value = _sim.water_pct()
+	_water_label.text = "Water table %.0f%% (%.0f gal)" % [_sim.water_pct(), _sim.water_gal]
+	_mh_bar.max_value = maxf(200.0, _sim.mh_bank)
+	_mh_bar.value = clampf(_sim.mh_bank, 0.0, _mh_bar.max_value)
+	_mh_label.text = "Manhours %.0f mh" % _sim.mh_bank
+	var warn := String(_sim.warning_text())
+	_warn_label.text = warn
+	_warn_label.visible = warn != ""
 
 
 func _try_place_at(screen_pos: Vector2) -> bool:
@@ -448,6 +556,7 @@ func _try_place_at(screen_pos: Vector2) -> bool:
 	var res: Dictionary = _hex.place(hex, _selected)
 	if bool(res.get("ok")):
 		_spawn_marker(hex, _selected)
+		_charge(_selected)
 		_refresh_hud("Placed '%s' at %s." % [_selected, hex])
 		return true
 	_refresh_hud("Cannot place '%s' at %s: %s" % [_selected, hex, res.get("reason")])
@@ -502,7 +611,16 @@ func _process(delta: float) -> void:
 		_yaw += DEMO_ORBIT_SPEED * delta
 		_apply_orbit()
 		while _demo_step < DEMO_EVENTS.size() and _demo_time >= DEMO_EVENTS[_demo_step]["t"]:
-			_demo_place(DEMO_EVENTS[_demo_step]["item"])
+			var ev: Dictionary = DEMO_EVENTS[_demo_step]
+			if ev.has("next"):
+				_on_next()
+				print("Demo: Next pressed | %s | money $%.0f water %.0f gal mh %.0f | %s" % [
+					_sim.month_label(), _sim.money, _sim.water_gal, _sim.mh_bank,
+					_sim.warning_text() if String(_sim.warning_text()) != "" else "no warning"])
+			elif ev.has("spam"):
+				_demo_spam(int(ev["spam"]))
+			else:
+				_demo_place(String(ev["item"]))
 			_demo_step += 1
 		if _record_dir != "":
 			_record_accum += delta
@@ -519,6 +637,10 @@ func _process(delta: float) -> void:
 			var failed := _record_failed or _demo_failed
 			print("Demo %s: %s frames=%d" % ["FAILED" if failed else "finished",
 				_hex.gate_label(), _record_index])
+			if _sim != null and _sim.is_ready():
+				print("Demo resources: %s money $%.0f water %.0f gal mh %.0f | %s" % [
+					_sim.month_label(), _sim.money, _sim.water_gal, _sim.mh_bank,
+					_sim.warning_text() if String(_sim.warning_text()) != "" else "no warning"])
 			get_tree().quit(1 if failed else 0)
 			return
 	if _capture_path == "" or _offscreen == null:
@@ -564,6 +686,7 @@ func _demo_place(item_id: String) -> void:
 	if _cam.is_position_behind(target):
 		_hex.place(hex, item_id)
 		_spawn_marker(hex, item_id)
+		_charge(item_id)
 	elif _try_place_at(_cam.unproject_position(target)):
 		via = "raycast"
 	else:
@@ -573,6 +696,30 @@ func _demo_place(item_id: String) -> void:
 		return
 	print("Demo: placed '%s' at %s via %s | %s" % [item_id, hex, via, _hex.gate_label()])
 	_refresh_hud("Demo placed '%s' at %s." % [item_id, hex])
+
+
+## Place N mesquite through the real hex validator (used by the demo to
+## outrun supply and trip the Q14 water warning). Direct grid placement,
+## not raycast: the 4 main demo items already exercise the click path.
+func _demo_spam(count: int) -> void:
+	var used := {}
+	for other in _overlay.get_children():
+		if String(other.name).begins_with("Marker_"):
+			var parts := String(other.name).split("_")
+			used[Vector2i(int(parts[parts.size() - 2]), int(parts[parts.size() - 1]))] = true
+	var placed := 0
+	for i in range(count):
+		var hex := _nearest_placeable("mesquite", used)
+		if hex == Vector2i(-1, -1):
+			break
+		if not bool(_hex.place(hex, "mesquite").get("ok")):
+			break
+		used[hex] = true
+		_spawn_marker(hex, "mesquite")
+		_charge("mesquite")
+		placed += 1
+	print("Demo: spammed %d/%d mesquite | %s" % [placed, count, _hex.gate_label()])
+	_refresh_hud("Demo planted %d extra mesquite." % placed)
 
 
 func _make_offscreen() -> void:
