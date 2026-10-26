@@ -1,0 +1,6 @@
+save:   data/save_example.json
+schema: data/save_schema.json
+version=1 seed=20260704 biome=sonoran month_index=14 hexes=10
+jsonschema library not installed; manual stdlib check is authoritative (SKIPPED strict pass)
+corrupt-file self-test: correctly REJECTED (10 errors, e.g. missing required field: biome_id)
+PASS: save validates against schema (manual check + corrupt-rejection self-test).
