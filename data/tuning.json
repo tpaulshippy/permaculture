@@ -1,0 +1,93 @@
+{
+  "meta": {
+    "version": "0.1.0",
+    "issue": 4,
+    "sim_resources": ["water_gal", "money_usd", "manhours_mh", "rain_gal"],
+    "units": {
+      "cost_usd": "$ (one-time build/plant cost)",
+      "build_manhours": "manhours (one-time build/plant labor)",
+      "upkeep_manhours_per_mo": "manhours/month (ongoing maintenance labor)",
+      "upkeep_usd_per_mo": "$/month (ongoing money cost: food/energy)",
+      "provides_manhours_per_mo": "manhours/month (labor supplied, house only)",
+      "pump_gal_per_mo": "gal/month (groundwater supplied, well only, depletes water table)",
+      "water_gal_per_mo": "gal/month (net water: +supply / -demand)",
+      "retention_percent": "% of monthly rainfall captured that would otherwise run off (ditch/berm only)",
+      "water_need_gal_per_mo": "gal/month irrigation demand per tree (mesquite only)",
+      "yield_usd_per_mo": "$/month income at maturity month 12+ (mesquite only)",
+      "rainfall_reference_gal_per_mo": "gal/month rainfall on 2-acre plot used for balance math"
+    },
+    "sim_baseline": {
+      "starting_money_usd": 10000,
+      "rainfall_reference_gal_per_mo": 1000,
+      "rain_note": "Fixed reference value for balance math (Q11: no RNG). Represents average capturable rainfall on the 2-acre plot. Actual biome pack (#6) may vary this seasonally; tuning holds at this reference.",
+      "base_rain_capture_percent": 5,
+      "base_rain_capture_gal_per_mo": 50,
+      "turn1_build_order": "house -> well L1 -> ditch/berm -> mesquite (house must come first: player starts at 0 manhours)",
+      "balance_check_monthly": {
+        "setup": "1x house + 1x well L1 + 2x ditch/berm + 4x mesquite",
+        "money_upfront_usd": 7460,
+        "labor_upfront_mh": 96,
+        "upkeep_mh_per_mo": 20,
+        "provided_mh_per_mo": 160,
+        "free_mh_per_mo": 140,
+        "money_per_mo_usd": -47,
+        "water_per_mo_gal": "+2500 pump + ~290 rain capture - 1000 trees = ~+1790 surplus"
+      }
+    }
+  },
+  "items": [
+    {
+      "id": "house",
+      "name": "House",
+      "category": "structure",
+      "cost_usd": 4000,
+      "build_manhours": 40,
+      "upkeep_manhours_per_mo": 8,
+      "upkeep_usd_per_mo": 80,
+      "provides_manhours_per_mo": 160,
+      "water_gal_per_mo": 0,
+      "retention_percent": 0,
+      "notes": "Provides 160 mh/mo (1 farmer). Upkeep 8 mh/mo repairs + $80/mo food. Net +152 mh/mo. Must be built first (player starts at 0 mh)."
+    },
+    {
+      "id": "well_l1",
+      "name": "Well L1",
+      "category": "structure",
+      "cost_usd": 2500,
+      "build_manhours": 24,
+      "upkeep_manhours_per_mo": 4,
+      "upkeep_usd_per_mo": 15,
+      "pump_gal_per_mo": 2500,
+      "water_gal_per_mo": 2500,
+      "retention_percent": 0,
+      "notes": "Pumps 2500 gal/mo from water table (depletes reserve). Upkeep 4 mh/mo + $15/mo energy. Supports ~10 mesquite at 250 gal/mo each."
+    },
+    {
+      "id": "ditch_berm",
+      "name": "Ditch / Berm (100 ft swale)",
+      "category": "structure",
+      "cost_usd": 400,
+      "build_manhours": 12,
+      "upkeep_manhours_per_mo": 2,
+      "upkeep_usd_per_mo": 0,
+      "water_gal_per_mo": 120,
+      "retention_percent": 12,
+      "notes": "Retains +12% of monthly rainfall per unit (additive, cap 60% total). At 1000 gal/mo reference rain = +120 gal/mo effective capture. Upkeep 2 mh/mo desilting. No energy cost."
+    },
+    {
+      "id": "mesquite",
+      "name": "Mesquite (per tree)",
+      "category": "plant",
+      "cost_usd": 40,
+      "build_manhours": 2,
+      "upkeep_manhours_per_mo": 1,
+      "upkeep_usd_per_mo": 0,
+      "water_need_gal_per_mo": 250,
+      "water_gal_per_mo": -250,
+      "yield_usd_per_mo": 12,
+      "yield_start_month": 12,
+      "retention_percent": 0,
+      "notes": "Native Sonoran tree. Plant 2 mh, upkeep 1 mh/mo pruning. Demands 250 gal/mo irrigation (rain capture offsets). Yields $12/mo pods/wood from month 12. Removing dead/alive tree costs 1 mh (per #1)."
+    }
+  ]
+}
