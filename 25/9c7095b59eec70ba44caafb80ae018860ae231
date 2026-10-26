@@ -1,0 +1,18 @@
+scripts/main.gd
+  h_6bbd00fe0a456a 21,50-63,79-81,108-118,143-153,243,530-645,665,722,775-780,801,864
+scripts/tutorial.gd
+  h_6bbd00fe0a456a 1-90
+tests/test_tutorial.gd
+  h_6bbd00fe0a456a 1-67
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "259c7095b59eec70ba44caafb80ae018860ae231",
+  "prompts": {},
+  "humans": {
+    "h_6bbd00fe0a456a": {
+      "author": "Paul Shippy <pshippy@gmail.com>"
+    }
+  }
+}
