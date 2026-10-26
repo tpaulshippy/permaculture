@@ -6,6 +6,10 @@ Reads the REAL example save (no mockups) and draws:
   - axial hex grid colored by content type (structure vs plant vs empty)
 Labels show structure_id / plant_id + growth stage.
 
+Requires matplotlib (not in stdlib):
+
+    pip install matplotlib
+
 Usage:
     python3 tools/render_save_diagram.py [save.json] [out.png]
 """
@@ -29,7 +33,11 @@ def axial_to_pixel(q: int, r: int, size: float = 1.0):
 
 
 def main(argv: list[str]) -> int:
-    import matplotlib
+    try:
+        import matplotlib
+    except ImportError:
+        print("FAIL: rendering needs matplotlib (pip install matplotlib).")
+        return 1
 
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -46,7 +54,7 @@ def main(argv: list[str]) -> int:
     ax.axis("off")
 
     title = (
-        f"save_example.json — v{save.get('version')} | seed={save.get('seed')} "
+        f"{save_path.name} — v{save.get('version')} | seed={save.get('seed')} "
         f"| biome={save.get('biome_id')} | month_index={save.get('month_index')}"
     )
     subtitle = (

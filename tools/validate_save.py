@@ -15,6 +15,8 @@ Exit 0 on PASS, 1 on FAIL.
 from __future__ import annotations
 
 import json
+import math
+import re
 import sys
 from pathlib import Path
 
@@ -22,7 +24,12 @@ REPO = Path(__file__).resolve().parent.parent
 DEFAULT_SAVE = REPO / "data" / "save_example.json"
 DEFAULT_SCHEMA = REPO / "data" / "save_schema.json"
 
+MAX_SEED = 2**53 - 1  # largest int exactly representable in double-based JSON parsers
+
 CONDITIONS = {"healthy", "stressed", "dead", None}
+
+# ISO-8601 UTC/offset datetime, e.g. 2026-10-25T00:00:00Z or +00:00 with optional fraction.
+SAVED_AT_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$")
 
 
 def fail(msg: str, errors: list[str]) -> None:
@@ -44,12 +51,13 @@ def check(save: dict, errors: list[str]) -> int:
         if field not in save:
             fail(f"missing required field: {field}", errors)
 
-    if save.get("version") != 1:
+    # bool is a subclass of int and True == 1, so reject bools explicitly.
+    if isinstance(save.get("version"), bool) or save.get("version") != 1:
         fail(f"version must be 1, got {save.get('version')!r}", errors)
 
     seed = save.get("seed")
-    if not (isinstance(seed, int) and not isinstance(seed, bool) and seed >= 0):
-        fail(f"seed must be a non-negative int, got {seed!r}", errors)
+    if not (isinstance(seed, int) and not isinstance(seed, bool) and 0 <= seed <= MAX_SEED):
+        fail(f"seed must be a non-negative int <= 2^53-1 ({MAX_SEED}), got {seed!r}", errors)
 
     biome = save.get("biome_id")
     if not (isinstance(biome, str) and len(biome) >= 1):
@@ -65,14 +73,14 @@ def check(save: dict, errors: list[str]) -> int:
             if f not in res:
                 fail(f"resources missing required field: {f}", errors)
         m = res.get("money")
-        if "money" in res and not (isinstance(m, (int, float)) and not isinstance(m, bool) and m >= 0):
-            fail(f"resources.money must be number >= 0, got {m!r}", errors)
+        if "money" in res and not (isinstance(m, (int, float)) and not isinstance(m, bool) and m >= 0 and math.isfinite(m)):
+            fail(f"resources.money must be a finite number >= 0, got {m!r}", errors)
         w = res.get("water_table")
-        if "water_table" in res and not (isinstance(w, (int, float)) and not isinstance(w, bool) and 0 <= w <= 100):
-            fail(f"resources.water_table must be number in 0..100, got {w!r}", errors)
+        if "water_table" in res and not (isinstance(w, (int, float)) and not isinstance(w, bool) and 0 <= w <= 100 and math.isfinite(w)):
+            fail(f"resources.water_table must be a finite number in 0..100, got {w!r}", errors)
         h = res.get("manhours")
-        if "manhours" in res and not (isinstance(h, (int, float)) and not isinstance(h, bool) and h >= 0):
-            fail(f"resources.manhours must be number >= 0, got {h!r}", errors)
+        if "manhours" in res and not (isinstance(h, (int, float)) and not isinstance(h, bool) and h >= 0 and math.isfinite(h)):
+            fail(f"resources.manhours must be a finite number >= 0, got {h!r}", errors)
         for k in res:
             if k not in ("money", "water_table", "manhours"):
                 fail(f"unknown resources property: {k!r}", errors)
@@ -109,22 +117,32 @@ def check(save: dict, errors: list[str]) -> int:
             if g is not None and not (isinstance(g, int) and not isinstance(g, bool) and 0 <= g <= 5):
                 fail(f"{where}.growth_stage must be int 0..5 or null, got {g!r}", errors)
             c = hx.get("condition", None)
-            if c not in CONDITIONS:
+            # Type-guard before membership: unhashable values (list/dict) must
+            # fail cleanly as schema violations, not raise TypeError.
+            if not (c is None or (isinstance(c, str) and c in CONDITIONS)):
                 fail(f"{where}.condition must be one of healthy/stressed/dead/null, got {c!r}", errors)
     else:
         fail(f"hexes must be an array, got {hexes!r}", errors)
 
     sa = save.get("saved_at", None)
-    if sa is not None and not (isinstance(sa, str) and len(sa) >= 1):
-        fail(f"saved_at must be a non-empty string when present, got {sa!r}", errors)
+    if sa is not None and not (isinstance(sa, str) and SAVED_AT_RE.match(sa)):
+        fail(f"saved_at must be an ISO-8601 datetime when present, got {sa!r}", errors)
 
     return n
 
 
-def try_jsonschema(save: dict, schema: dict, errors: list[str]) -> str:
+def try_jsonschema(save: dict, schema: dict, schema_path: Path, errors: list[str]) -> str:
     try:
         import jsonschema  # type: ignore
     except ImportError:
+        if schema_path.resolve() != DEFAULT_SCHEMA.resolve():
+            fail(
+                f"custom schema {schema_path} cannot be enforced without the "
+                "'jsonschema' package installed (manual check covers v1 only); "
+                "install jsonschema or validate against data/save_schema.json",
+                errors,
+            )
+            return "jsonschema strict pass: FAIL (custom schema needs jsonschema installed)"
         return "jsonschema library not installed; manual stdlib check is authoritative (SKIPPED strict pass)"
     try:
         jsonschema.validate(instance=save, schema=schema)
@@ -154,10 +172,11 @@ def main(argv: list[str]) -> int:
 
     errors: list[str] = []
     n = check(save, errors)
-    strict = try_jsonschema(save, schema, errors)
+    strict = try_jsonschema(save, schema, schema_path, errors)
 
-    print(f"version={save.get('version')} seed={save.get('seed')} "
-          f"biome={save.get('biome_id')} month_index={save.get('month_index')} hexes={n}")
+    summary = save if isinstance(save, dict) else {}
+    print(f"version={summary.get('version')} seed={summary.get('seed')} "
+          f"biome={summary.get('biome_id')} month_index={summary.get('month_index')} hexes={n}")
     print(strict)
 
     # Corrupt-file rule self-test: a garbage payload must FAIL validation
