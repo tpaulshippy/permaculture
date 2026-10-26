@@ -165,10 +165,18 @@ def main():
     proj = os.path.join(REPO, "project.godot")
     with open(proj, encoding="utf-8") as f:
         proj_text = f.read()
+    hash_comments = [
+        ln for ln in proj_text.splitlines() if ln.lstrip().startswith("#")
+    ]
+    check(not hash_comments,
+          "project.godot uses ';' comments (Godot cfg has no '#' comments): %s"
+          % hash_comments)
     check('renderer/rendering_method="forward_plus"' in proj_text,
           "desktop renderer stays forward_plus")
     check('renderer/rendering_method.mobile="gl_compatibility"' in proj_text,
           "mobile renderer override is gl_compatibility")
+    check("textures/vram_compression/import_etc2_astc=true" in proj_text,
+          "ETC2/ASTC import enabled (Android export requirement)")
     check("window/handheld/orientation=4" in proj_text,
           "handheld orientation is sensor_landscape (4)")
 

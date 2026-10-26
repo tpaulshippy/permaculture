@@ -34,6 +34,22 @@ No gameplay fork — `scripts/`, `scenes/`, `data/` are untouched
    `system-images;android-34;google_apis;arm64-v8a` via `sdkmanager`.
 3. JDK 17+ (`JAVA_HOME`) for the gradle build; debug signing uses the
    auto-generated debug keystore (no secrets in repo).
+4. Android build template (generated, gitignored under `android/` — install
+   once per checkout, same as the editor's Project menu does):
+   ```sh
+   TDIR="$HOME/Library/Application Support/Godot/export_templates/4.7.2.stable"
+   mkdir -p android/build && unzip -q -o "$TDIR/android_source.zip" -d android/build
+   touch android/build/.gdignore
+   printf '4.7.2.stable\n' > android/.build_version
+   ```
+   Layout must be `android/build/build.gradle` (that is what the exporter
+   checks) with the template identifier in `android/.build_version`
+   (else: "no version info for it exists"), plus
+   `rendering/textures/vram_compression/import_etc2_astc=true` in
+   `project.godot` (already committed — without it the export stops with
+   "ETC2/ASTC texture compression is required"). Note: `project.godot`
+   comments must use `;` (Godot cfg has no `#` comments — a `#` line silently
+   glues onto the next key and disables it; the validator guards this).
 4. Point the editor/CLI at the SDK: Godot Editor Settings →
    `export/android/android_sdk_path` (or `ANDROID_HOME` env for CLI-adjacent
    tooling), `export/android/java_sdk_path`.

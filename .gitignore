@@ -6,3 +6,7 @@ build/
 build/**
 android/
 android/**
+# Godot-generated import metadata (editor noise, none tracked in this repo).
+# Keeps `git status` clean so tools/validate_android_preset.py sees only
+# real packaging changes.
+*.import
