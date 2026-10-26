@@ -29,10 +29,12 @@ PASS: icons/android_adaptive_background_432x432.png is 432x432 (got (432, 432))
 PASS: permission keys enumerated (147)
 PASS: no Android permissions requested (offenders: [])
 PASS: no custom permissions
+PASS: project.godot uses ';' comments (Godot cfg has no '#' comments): []
 PASS: desktop renderer stays forward_plus
 PASS: mobile renderer override is gl_compatibility
+PASS: ETC2/ASTC import enabled (Android export requirement)
 PASS: handheld orientation is sensor_landscape (4)
-changed vs origin/main: ['.gitignore', 'docs/android.md', 'docs/evidence/8/validator.log', 'export_presets.cfg', 'icons/android_adaptive_background_432x432.png', 'icons/android_adaptive_foreground_432x432.png', 'icons/android_main_192x192.png', 'project.godot', 'tools/validate_android_preset.py']
+changed vs origin/main: ['docs/android.md', 'docs/evidence/8/commands.log', 'docs/evidence/8/demo.mp4', 'docs/evidence/8/still.png', 'docs/evidence/8/validator.log']
 PASS: no gameplay fork (non-packaging changes: [])
 ---
 ALL CHECKS PASSED

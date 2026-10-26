@@ -1,0 +1,43 @@
+# Exact build/install/QA commands run for issue #8 (2026-10-26, this machine).
+# Worktree: /tmp/perma-issue8, branch feat/8-android.
+# Prereqs already on machine: Godot 4.7.2, export templates 4.7.2.stable,
+# Android SDK $HOME/Android/sdk, JDK 21, emulator AVD `perma8` (running headless).
+
+export PATH="$HOME/Android/sdk/platform-tools:$HOME/Android/sdk/emulator:$PATH"
+
+# 0. Clean Godot-generated import noise; *.import now gitignored (none tracked).
+git clean -f -- '*.import'
+
+# 1. Debug APK export (headless). android/build template + .build_version
+#    installed per docs/android.md; project.godot carries the ETC2/ASTC flag.
+mkdir -p build/android
+godot --headless --path . --export-debug "Android" build/android/permaculture.apk
+# -> build/android/permaculture.apk (163 MB, debug-signed)
+
+# 2. Install + cold launch on emulator-5554 (AVD perma8).
+adb install -r build/android/permaculture.apk
+# -> Success
+adb shell monkey -p com.tpaulshippy.permaculture 1
+adb shell pidof com.tpaulshippy.permaculture
+# -> pid running; first launch shows one-time Android immersive-mode hint
+#    ("Viewing full screen"); dismissed via tap from uiautomator bounds:
+adb shell uiautomator dump /sdcard/ui.xml   # "Got it" [1363,464][1594,590]
+adb shell input tap 1478 527
+adb exec-out screencap -p > /tmp/perma8_shot4.png   # clean terrain render
+
+# 3. Video evidence: cold-start relaunch captured on-device.
+adb shell "rm -f /sdcard/demo.mp4; screenrecord --time-limit 30 --bit-rate 6000000 /sdcard/demo.mp4" &
+sleep 3
+adb shell am force-stop com.tpaulshippy.permaculture
+sleep 2
+adb shell monkey -p com.tpaulshippy.permaculture 1
+# (wait for 30 s recording to finish)
+adb pull /sdcard/demo.mp4 /tmp/perma8_demo.mp4
+# -> 26.6 s, 2400x1080 h264; shows terrain render, relaunch, app splash w/
+#    custom launcher icon, terrain render again. Frames spot-checked w/ ffmpeg.
+
+# 4. Evidence stills + validator output committed under docs/evidence/8/.
+adb exec-out screencap -p > docs/evidence/8/still.png
+cp /tmp/perma8_demo.mp4 docs/evidence/8/demo.mp4
+python3 tools/validate_android_preset.py > docs/evidence/8/validator.log
+ffprobe -v error -show_entries format=duration,size -show_entries stream=width,height,codec_name docs/evidence/8/demo.mp4

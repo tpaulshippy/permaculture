@@ -66,20 +66,30 @@ Validate the preset without building:
 python3 tools/validate_android_preset.py
 ```
 
-## QA notes (real run, this machine)
+## QA notes (real run, this machine, 2026-10-26)
 
-- Target: Android emulator (see Evidence below); no physical device used.
-- Install: `adb install -r build/android/permaculture.apk`
-- Launch: `adb shell monkey -p com.tpaulshippy.permaculture 1`
+- Target: Android emulator, AVD `perma8` (sdk_gphone64_arm64, headless,
+  `emulator-5554`); no physical device used.
+- Build: `godot --headless --path . --export-debug "Android"
+  build/android/permaculture.apk` → 163 MB debug-signed APK, `adb install`
+  reports `Success`.
+- Launch: `adb shell monkey -p com.tpaulshippy.permaculture 1`; process
+  confirmed via `adb shell pidof`.
 - Result: app launches to the terrain MVP scene (seeded Sonoran heightmap,
-  terrain render mode), holds stable, no crashes, no permission prompts
-  (none requested). Touch input: the MVP scene is a static viewer with no
-  camera/gameplay input on any platform — same shared code as desktop, so
-  there is nothing touch-specific to exercise yet (orbit/place controls do
-  not exist in the shared codebase; adding them is out of scope for this
-  packaging issue).
-- Perf: terrain mesh is a single 20x20-cell ArrayMesh; first-frame render on
-  the emulator was smooth with no ANR. See `docs/evidence/8/`.
+  terrain render mode), holds stable, no crashes, no ANR, no permission
+  prompts (none requested). On-device render matches the desktop reference
+  `docs/evidence/2/terrain_topdown.png` (same camera/framing, tan Sonoran
+  clear color) under the `gl_compatibility` mobile renderer.
+- First launch shows Android's one-time immersive-mode hint ("Viewing full
+  screen"); dismissed via the "Got it" button (uiautomator bounds
+  `[1363,464][1594,590]`). Cold-start relaunch shows the app splash with the
+  custom launcher icon, then the terrain scene — all captured in `demo.mp4`.
+- Touch input: the MVP scene is a static viewer with no camera/gameplay input
+  on any platform — same shared code as desktop, so there is nothing
+  touch-specific to exercise yet (orbit/place controls do not exist in the
+  shared codebase; adding them is out of scope for this packaging issue).
+- Perf: terrain mesh is a single 20x20-cell ArrayMesh; render on the emulator
+  was smooth with no ANR. See `docs/evidence/8/`.
 
 ## Evidence
 
